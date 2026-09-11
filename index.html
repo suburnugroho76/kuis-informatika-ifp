@@ -302,6 +302,39 @@
 
   </main>
 
+  <!-- MODAL SELEBRASI CYBER LEGEND (XP 100) -->
+  <div id="modal-cyber-legend" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md transition-opacity">
+    <div class="tech-card rounded-3xl p-6 md:p-8 max-w-md w-full text-center space-y-5 border-2 border-amber-400/60 shadow-2xl relative overflow-hidden bg-white">
+      <div class="absolute -top-10 -right-10 w-32 h-32 bg-amber-300/20 rounded-full blur-2xl"></div>
+      <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-cyan-300/20 rounded-full blur-2xl"></div>
+      
+      <div class="w-20 h-20 rounded-full bg-amber-100 border-4 border-amber-300 text-amber-500 mx-auto flex items-center justify-center text-4xl shadow-lg shadow-amber-500/20 animate-bounce">
+        👑
+      </div>
+
+      <div class="space-y-3">
+        <span class="px-3.5 py-1 rounded-full bg-amber-100 text-amber-800 font-tech font-bold text-xs border border-amber-300 tracking-wider">
+          PENCAPAIAN TERTINGGI!
+        </span>
+        <h3 class="text-xl md:text-2xl font-tech font-extrabold text-slate-900 leading-tight">
+          PENCAPAIAN SPEKTAKULER!
+        </h3>
+        <div class="text-sm md:text-base font-tech font-bold text-blueprint-700 bg-blueprint-50 p-4 rounded-2xl border border-blueprint-200 shadow-inner">
+          SELAMAT NO ABSEN <span id="modal-absen-num" class="text-amber-600 font-extrabold">01</span> telah mencapai XP <span id="modal-xp-num" class="text-amber-600 font-extrabold">100</span> yaitu CYBER LEGEND.
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-500 font-medium leading-relaxed">
+        Luar biasa! Siswa berhasil menguasai seluruh tantangan materi Informatika dengan nilai maksimal!
+      </p>
+
+      <button onclick="closeLegendModal()" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-tech font-bold text-sm shadow-md shadow-amber-500/30 transition transform active:scale-95 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-trophy"></i>
+        <span>LANJUTKAN PERMAINAN</span>
+      </button>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer class="bg-white/60 backdrop-blur-md border-t border-blueprint-100 py-3 px-4 text-center text-xs font-tech font-medium text-slate-400">
     INFORMATICS QUEST IFP EDITION · FASE D SMP · TOTAL BANK 100 SOAL
@@ -846,6 +879,7 @@
       const fb = document.getElementById('feedback-box');
       if (isCorrect) {
         playSfx('correct');
+        const previousXP = scores[activeClass][selectedAbsen] || 0;
         scores[activeClass][selectedAbsen] += reward;
         renderAbsenGrid();
         updateSelectedAbsenBadge();
@@ -854,6 +888,11 @@
 
         const currentXP = scores[activeClass][selectedAbsen];
         const currentRank = getRank(currentXP);
+
+        // Pemicu otomatis popup selebrasi saat siswa mencapai/melewati 100 XP
+        if (currentXP >= 100 && previousXP < 100) {
+          showCyberLegendModal(selectedAbsen, currentXP);
+        }
 
         fb.className = "p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 transition-all space-y-2";
         document.getElementById('feedback-title').className = "flex items-center gap-2 font-tech font-bold text-sm md:text-base text-emerald-700";
@@ -874,6 +913,23 @@
       }
 
       enableNextButton();
+    }
+
+    function showCyberLegendModal(absenNum, xpVal) {
+      const numStr = absenNum < 10 ? `0${absenNum}` : `${absenNum}`;
+      document.getElementById('modal-absen-num').innerText = numStr;
+      document.getElementById('modal-xp-num').innerText = xpVal;
+      document.getElementById('modal-cyber-legend').classList.remove('hidden');
+
+      // Efek kembang api spesial Cyber Legend
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 120, spread: 100, origin: { y: 0.5 } });
+      }
+    }
+
+    function closeLegendModal() {
+      playSfx('click');
+      document.getElementById('modal-cyber-legend').classList.add('hidden');
     }
 
     function enableNextButton() {
