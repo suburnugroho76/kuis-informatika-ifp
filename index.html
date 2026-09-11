@@ -1,389 +1,484 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kuis Informatika IFP - Interactive Class & Gamification</title>
+  <title>Informatics Quest - IFP Edition</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Canvas Confetti CDN -->
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <!-- FontAwesome Icons -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  
+  <!-- Google Fonts: Space Grotesk & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            tech: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            blueprint: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              200: '#bae0fd',
+              300: '#7cc7fb',
+              400: '#36a9f7',
+              500: '#0c8de4',
+              600: '#026fc1',
+              700: '#03589c',
+              800: '#074b81',
+              900: '#0c3f6d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    .bg-blueprint-grid {
+      background-color: #f4f8fe;
+      background-image: 
+        linear-gradient(to right, rgba(54, 169, 247, 0.12) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(54, 169, 247, 0.12) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .tech-card {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(186, 224, 253, 0.8);
+      box-shadow: 0 10px 30px -5px rgba(12, 141, 228, 0.08);
+    }
+
+    .absen-btn {
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
     
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    .glass-panel {
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .glow-cyan {
-      box-shadow: 0 0 25px rgba(6, 182, 212, 0.35);
-    }
-
-    .glow-emerald {
-      box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
-    }
-
-    .glow-amber {
-      box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
-    }
-
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.08); opacity: 0.4; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-
-    .animate-pulse-ring {
-      animation: pulse-ring 3s infinite ease-in-out;
-    }
-
-    /* Custom scrollbar untuk panel IFP */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.6);
-      border-radius: 8px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(56, 189, 248, 0.4);
-      border-radius: 8px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(56, 189, 248, 0.8);
+    .absen-btn:active {
+      transform: scale(0.92);
     }
   </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen overflow-hidden relative">
 
-  <!-- Tombol Layar Penuh (Floating Top-Right) -->
-  <button onclick="toggleFullscreen()" class="fixed top-4 right-4 z-50 bg-slate-900/90 hover:bg-cyan-500 text-cyan-400 hover:text-slate-950 p-3.5 rounded-2xl border border-cyan-500/30 transition shadow-xl active:scale-90 flex items-center gap-2 group" title="Toggle Fullscreen">
-    <i class="fa-solid fa-expand text-xl transition group-hover:scale-110"></i>
-    <span class="text-xs font-bold uppercase tracking-wider hidden md:inline">Full Screen</span>
-  </button>
+<body class="bg-blueprint-grid font-sans text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-blueprint-200">
 
-  <!-- Notification Toast -->
-  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-slate-950 px-6 py-3 rounded-2xl font-bold shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 flex items-center gap-3">
-    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
-    <span id="toast-message">Pesan notifikasi</span>
-  </div>
-
-
-  <!-- ================= 1. HALAMAN UTAMA (LANDING PAGE) ================= -->
-  <div id="screen-landing" class="h-screen w-screen flex flex-col justify-center items-center relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
-    <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:28px_28px]"></div>
-    
-    <div class="z-10 text-center px-6 max-w-4xl flex flex-col items-center">
-      <div class="inline-flex items-center px-5 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 font-semibold text-sm md:text-base mb-6 tracking-wide shadow-inner">
-        <i class="fa-solid fa-chalkboard-user mr-2 text-cyan-300"></i> APLIKASI KUIS INTERAKTIF IFP KELAS 9 (100 SOAL)
-      </div>
-      
-      <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-200 to-indigo-300 mb-6 drop-shadow-2xl leading-tight">
-        INFORMATIKA FUTURE EXPLORER
-      </h1>
-      
-      <p class="text-lg md:text-2xl text-slate-300 mb-10 max-w-2xl leading-relaxed font-normal">
-        Platform interaktif layar sentuh IFP. Kumpulkan <span class="text-amber-400 font-bold">100 Poin setiap 5 soal benar</span>, latih keberanian mencoba, dan raih prestasi bersama!
-      </p>
-      
-      <button onclick="playSFX('click'); goToClassSelect();" class="group relative inline-flex items-center justify-center px-10 py-5 text-2xl font-black text-slate-950 transition-all duration-300 bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-300 rounded-2xl shadow-2xl hover:shadow-cyan-400/50 hover:scale-105 active:scale-95 glow-cyan cursor-pointer">
-        <span>MULAI MISI KELAS</span>
-        <i class="fa-solid fa-arrow-right-long ml-4 transition-transform group-hover:translate-x-3 text-2xl"></i>
-      </button>
-    </div>
-  </div>
-
-
-  <!-- ================= 2. HALAMAN PILIH KELAS ================= -->
-  <div id="screen-class" class="hidden h-screen w-screen flex flex-col p-6 md:p-8 bg-slate-950 relative overflow-hidden">
-    <div class="text-center mb-6 z-10">
-      <h2 class="text-3xl md:text-4xl font-extrabold text-cyan-400 mb-2">Pilih Kelas Kamu</h2>
-      <p class="text-slate-400 text-base md:text-lg">Setiap kelas dilengkapi bank 100 soal tantangan Informatika Fase D!</p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 flex-1 max-w-6xl mx-auto w-full items-center z-10 overflow-y-auto p-2" id="class-grid">
-      <!-- Generated by JS -->
-    </div>
-  </div>
-
-
-  <!-- ================= 3. HALAMAN KONFIRMASI READY ================= -->
-  <div id="screen-roster" class="hidden h-screen w-screen flex flex-col justify-center items-center bg-slate-950 p-6">
-    <div class="glass-panel p-8 md:p-12 rounded-3xl text-center max-w-lg w-full border-cyan-500/30 shadow-2xl flex flex-col items-center">
-      <div id="roster-badge" class="w-24 h-24 rounded-3xl flex items-center justify-center text-4xl mb-6 bg-cyan-500/20 text-cyan-400 border border-cyan-400/30 shadow-inner">
-        <i class="fa-solid fa-graduation-cap"></i>
-      </div>
-      <h2 id="roster-class-title" class="text-4xl font-black mb-1 text-white">Kelas 9A</h2>
-      <p id="roster-theme-title" class="text-cyan-400 text-xl font-bold mb-6">AI & Future Tech</p>
-      
-      <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 w-full mb-8 text-left">
-        <div class="flex justify-between items-center text-sm text-slate-400 mb-2">
-          <span>Siswa Terdaftar:</span>
-          <span class="font-bold text-white">32 Siswa (Absen 01 - 32)</span>
-        </div>
-        <div class="flex justify-between items-center text-sm text-slate-400 mb-2">
-          <span>Target Poin:</span>
-          <span class="font-bold text-amber-400">100 Poin / 5 Soal Benar</span>
-        </div>
-        <div class="flex justify-between items-center text-sm text-slate-400">
-          <span>Bank Soal:</span>
-          <span class="font-bold text-emerald-400">100 Soal Siap Diacak</span>
-        </div>
-      </div>
-
-      <button onclick="playSFX('click'); startMindfulPause();" class="w-full py-5 bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 font-black rounded-2xl text-2xl hover:scale-105 active:scale-95 transition shadow-xl glow-emerald flex items-center justify-center gap-3 cursor-pointer">
-        <i class="fa-solid fa-circle-check"></i>
-        <span>OK, SIAP KUIS!</span>
-      </button>
-    </div>
-  </div>
-
-
-  <!-- ================= MODAL MINDFUL PAUSE ================= -->
-  <div id="modal-mindful" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
-    <div class="w-40 h-40 rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center mb-8 animate-pulse-ring relative">
-      <i class="fa-solid fa-brain text-5xl text-cyan-300"></i>
-    </div>
-    <h3 class="text-3xl font-extrabold text-white mb-3">Tarik Napas Sejenak...</h3>
-    <p class="text-slate-300 text-xl max-w-md leading-relaxed mb-8">
-      Fokuskan pikiran, tanamkan keberanian mencoba. Setiap jawaban adalah proses mengasah logika!
-    </p>
-    <div class="text-cyan-400 font-extrabold text-4xl" id="mindful-timer">3</div>
-  </div>
-
-
-  <!-- ================= 4. HALAMAN KUIS UTAMA ================= -->
-  <div id="screen-quiz" class="hidden h-screen w-screen flex flex-col p-4 md:p-6 bg-slate-950 overflow-hidden">
-    
-    <!-- Top Header Bar -->
-    <div class="flex justify-between items-center mb-3 bg-slate-900/90 p-3 md:p-4 rounded-2xl border border-slate-800 shadow-md">
-      <div class="flex items-center space-x-3 md:space-x-4">
-        <span id="quiz-class-tag" class="px-3 md:px-4 py-2 bg-indigo-600/30 border border-indigo-500/50 rounded-xl text-indigo-300 font-bold text-sm md:text-lg flex items-center gap-2">
-          <i class="fa-solid fa-layer-group"></i> <span id="quiz-class-name">9A - AI</span>
-        </span>
-        <span class="text-slate-400 text-sm md:text-lg font-semibold">
-          Soal <span id="current-q-num" class="text-white font-extrabold">1</span>/<span id="total-q-num">100</span>
-        </span>
-      </div>
-
-      <!-- Mindful Motivational Banner -->
-      <div class="hidden lg:flex items-center bg-slate-800/80 border border-slate-700/50 px-4 py-2 rounded-xl text-slate-300 text-sm">
-        <i class="fa-solid fa-seedling text-emerald-400 mr-2.5 text-lg"></i>
-        <span>"Jangan takut salah! Kegagalan adalah awal dari penemuan besar dalam ilmu komputer."</span>
-      </div>
-
-      <!-- Tombol Selesaikan Kuis (Pojok Atas / Kanan) -->
-      <button onclick="playSFX('click'); finishQuizEarly();" class="px-4 py-2 bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl text-xs md:text-sm font-bold transition flex items-center gap-2 cursor-pointer">
-        <i class="fa-solid fa-flag-checkered"></i> Selesaikan Kuis
-      </button>
-    </div>
-
-    <!-- Main Content Area: Left (Quiz 75%) & Right (Absen Panel 25%) -->
-    <div class="flex-1 grid grid-cols-12 gap-4 md:gap-6 h-[calc(100%-110px)] overflow-hidden">
-      
-      <!-- SISI KIRI & TENGAH: SOAL & JAWABAN -->
-      <div class="col-span-12 lg:col-span-8 flex flex-col justify-between glass-panel p-5 md:p-7 rounded-3xl relative overflow-y-auto">
-        
-        <div>
-          <!-- Area Soal -->
-          <div class="mb-5">
-            <div class="text-cyan-400 font-bold text-xs md:text-sm tracking-wider uppercase mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-circle-question"></i> PERTANYAAN INFORMATIKA FASE D
-            </div>
-            <h3 id="question-text" class="text-xl md:text-2xl lg:text-3xl font-bold leading-snug text-slate-100">
-              Loading Pertanyaan...
-            </h3>
+  <!-- HEADER BAR -->
+  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-blueprint-100 px-4 md:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button id="nav-back-btn" onclick="goToHome()" class="hidden px-3.5 py-1.5 rounded-full bg-blueprint-50 text-blueprint-600 border border-blueprint-200 hover:bg-blueprint-100 font-tech font-semibold text-xs md:text-sm flex items-center gap-2 transition">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>WORLDS</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blueprint-600 to-cyan-400 flex items-center justify-center text-white shadow-md shadow-blueprint-500/20">
+            <i class="fa-solid fa-microchip text-sm"></i>
           </div>
-
-          <!-- Area Opsi Jawaban (Grid 2x2) -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4" id="options-container">
-            <!-- Generated by JS -->
+          <div>
+            <span class="font-tech font-bold text-slate-900 tracking-tight text-sm md:text-base">INFORMATICS <span class="text-blueprint-500">QUEST</span></span>
+            <span class="hidden md:inline-block ml-2 text-[10px] font-tech font-semibold text-blueprint-600 bg-blueprint-50 px-2 py-0.5 rounded-full border border-blueprint-200">FASE D SMP · 100 SOAL</span>
           </div>
         </div>
-
-        <div>
-          <!-- Umpan Balik (Feedback Box) -->
-          <div id="feedback-box" class="hidden p-4 rounded-2xl border transition-all duration-300 mb-3">
-            <div class="flex items-start space-x-3">
-              <div id="feedback-icon" class="text-2xl md:text-3xl mt-0.5"></div>
-              <div>
-                <h4 id="feedback-title" class="font-bold text-base md:text-lg"></h4>
-                <p id="feedback-desc" class="text-slate-300 text-xs md:text-sm mt-1 leading-relaxed"></p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action Bar Bawah -->
-          <div class="flex justify-between items-center pt-3 border-t border-slate-800">
-            <div id="active-student-display" class="text-sm md:text-base text-slate-300 font-medium">
-              <i class="fa-solid fa-hand-pointer text-amber-400 mr-2"></i> Sentuh <span class="text-amber-400 font-bold">Nomor Absen</span> dulu!
-            </div>
-            <button id="next-btn" onclick="playSFX('click'); nextQuestion();" disabled class="px-6 md:px-8 py-3 bg-slate-800 text-slate-500 font-extrabold text-base md:text-xl rounded-2xl cursor-not-allowed transition flex items-center gap-2">
-              <span>Soal Selanjutnya</span>
-              <i class="fa-solid fa-arrow-right"></i>
-            </button>
-          </div>
-        </div>
-
       </div>
 
-      <!-- SISI KANAN: PANEL ABSEN SISWA IFP -->
-      <div class="col-span-12 lg:col-span-4 glass-panel p-4 rounded-3xl flex flex-col justify-between border-slate-800 overflow-y-auto">
-        <div>
-          <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
-            <h3 class="text-base font-extrabold text-slate-200 flex items-center gap-2">
-              <i class="fa-solid fa-users text-cyan-400"></i> Papan Absen (1 - 32)
-            </h3>
-            <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-full font-bold">
-              Target 100 Poin
-            </span>
-          </div>
-          
-          <!-- Grid Nomor Absen (1-32) -->
-          <div class="grid grid-cols-4 sm:grid-cols-8 lg:grid-cols-4 gap-2 max-h-[38vh] lg:max-h-[46vh] overflow-y-auto pr-1" id="absen-grid">
-            <!-- Generated by JS -->
-          </div>
+      <div class="flex items-center gap-3">
+        <div id="class-badge" class="hidden px-3 py-1 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 font-tech font-bold text-xs">
+          CLASS <span id="current-class-label">9A</span>
         </div>
-
-        <!-- Indicator Absen Terpilih & Statistik Poin -->
-        <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl text-center mt-2">
-          <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
-            <span>Siswa Aktif:</span>
-            <span id="stat-correct-count" class="text-emerald-400 font-bold">0 Benar</span>
-          </div>
-          <span id="current-selected-absen-text" class="text-cyan-300 font-black text-lg block">
-            Belum Dipilih
-          </span>
-        </div>
+        <button onclick="toggleTeacherMode()" class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-tech font-medium text-xs md:text-sm flex items-center gap-2 shadow-sm transition">
+          <i class="fa-solid fa-graduation-cap text-blueprint-500"></i>
+          <span class="hidden sm:inline">TEACHER MODE</span>
+        </button>
       </div>
-
     </div>
+  </header>
 
-    <!-- Tombol Selesaikan Kuis di Footer Bawah -->
-    <div class="mt-3 text-center">
-      <button onclick="playSFX('click'); finishQuizEarly();" class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-black text-base rounded-2xl shadow-xl transition transform hover:scale-105 active:scale-95 cursor-pointer">
-        <i class="fa-solid fa-award mr-2"></i> SELESAIKAN KUIS & LIHAT REKAP NILAI
-      </button>
-    </div>
-  </div>
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
 
-
-  <!-- ================= MODAL SELEBRASI 100 POIN (5 SOAL BENAR) ================= -->
-  <div id="modal-milestone" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
-    <div class="glass-panel p-8 md:p-10 rounded-3xl max-w-lg w-full border-amber-500/40 shadow-2xl glow-amber flex flex-col items-center relative">
-      <div class="w-24 h-24 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center mb-6 text-5xl text-amber-300 animate-bounce">
-        <i class="fa-solid fa-medal"></i>
+    <!-- SCREEN 1: WELCOME SCREEN -->
+    <section id="screen-home" class="py-8 md:py-12 flex flex-col items-center text-center space-y-8">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blueprint-50 border border-blueprint-200 text-blueprint-700 text-xs md:text-sm font-tech font-semibold shadow-sm">
+        <i class="fa-solid fa-rocket text-blueprint-500 animate-pulse"></i>
+        <span>FASE D SMP · PLATFORM KUIS INTERAKTIF IFP</span>
       </div>
 
-      <span class="px-4 py-1.5 bg-amber-500/20 border border-amber-400/40 text-amber-300 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
-        🎉 PENCAPAIAN LUAR BIASA!
-      </span>
-
-      <h3 id="milestone-student-name" class="text-3xl font-black text-white mb-2">
-        Selamat, Absen 05!
-      </h3>
-      <div class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 mb-4">
-        BERHASIL MERAIH 100 POIN!
+      <div class="max-w-3xl space-y-3">
+        <h1 class="text-3xl md:text-5xl font-tech font-extrabold text-slate-900 tracking-tight">
+          INFORMATICS <span class="text-transparent bg-clip-text bg-gradient-to-r from-blueprint-600 to-cyan-500">QUEST</span>
+        </h1>
+        <p class="text-sm md:text-base font-tech font-medium text-slate-600 max-w-xl mx-auto leading-relaxed">
+          Media pembelajaran gamifikasi interaktif untuk menguji kompetensi Informatika secara aktif, seru, dan terstruktur di layar sentuh IFP.
+        </p>
       </div>
 
-      <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl text-slate-200 text-sm md:text-base leading-relaxed mb-6 italic">
-        <i class="fa-solid fa-quote-left text-amber-400 mr-2"></i>
-        <span id="milestone-quote">
-          "Kerja keras tidak pernah mengkhianati hasil. Setiap langkah kecil dalam memahami komputer memperluas wawasanmu di masa depan!"
-        </span>
-        <i class="fa-solid fa-quote-right text-amber-400 ml-2"></i>
-      </div>
-
-      <button onclick="playSFX('click'); closeMilestone();" class="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black rounded-2xl text-xl hover:scale-105 active:scale-95 transition shadow-lg cursor-pointer">
-        LANJUTKAN TANTANGAN <i class="fa-solid fa-arrow-right ml-2"></i>
-      </button>
-    </div>
-  </div>
-
-
-  <!-- ================= 5. MODAL / HALAMAN REKAP ABSEN & NILAI ================= -->
-  <div id="screen-summary" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-6 overflow-y-auto">
-    <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-4xl w-full border-cyan-500/30 shadow-2xl my-auto">
-      
-      <!-- Summary Header -->
-      <div class="flex flex-col md:flex-row justify-between items-center pb-6 border-b border-slate-800 mb-6 gap-4">
-        <div class="text-center md:text-left">
-          <div class="inline-flex items-center px-3 py-1 bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
-            <i class="fa-solid fa-square-poll-vertical mr-1.5"></i> REKAPITULASI HASIL KUIS
+      <!-- FEATURE HIGHLIGHTS CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-5xl text-left pt-2">
+        <div class="tech-card rounded-2xl p-4 space-y-2 border border-blueprint-100 hover:border-blueprint-300 transition">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center font-bold text-lg">
+            🏆
           </div>
-          <h2 class="text-3xl font-black text-white" id="summary-title">Rekap Kuis Kelas 9A</h2>
-          <p class="text-slate-400 text-sm">Hasil partisipasi dan perolehan poin siswa di papan interaktif IFP</p>
+          <h4 class="font-tech font-bold text-slate-900 text-sm">Gamifikasi & Rank</h4>
+          <p class="text-xs text-slate-500 font-medium leading-normal">
+            Kumpulkan XP untuk memanjat 5 tingkatan Rank dari <i>Newbie</i> hingga <i>Cyber Legend</i>.
+          </p>
         </div>
-        
-        <div class="flex gap-3">
-          <button onclick="playSFX('click'); resetQuiz();" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl transition text-sm flex items-center gap-2 cursor-pointer">
-            <i class="fa-solid fa-rotate-right"></i> Ulangi Kuis
-          </button>
-          <button onclick="playSFX('click'); goToClassSelect();" class="px-5 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-black rounded-2xl transition text-sm flex items-center gap-2 glow-cyan cursor-pointer">
-            <i class="fa-solid fa-shapes"></i> Pilih Kelas Lain
-          </button>
-        </div>
-      </div>
 
-      <!-- KATA MUTIARA KERJA KERAS & JANGAN TAKUT MENCOBA -->
-      <div class="bg-gradient-to-r from-indigo-950/80 via-slate-900 to-purple-950/80 border border-indigo-500/30 p-5 rounded-2xl mb-6 shadow-inner text-center md:text-left flex flex-col md:flex-row items-center gap-4">
-        <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-3xl text-indigo-300 flex-shrink-0">
-          <i class="fa-solid fa-lightbulb"></i>
+        <div class="tech-card rounded-2xl p-4 space-y-2 border border-blueprint-100 hover:border-blueprint-300 transition">
+          <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-200 flex items-center justify-center font-bold text-lg">
+            ⚡
+          </div>
+          <h4 class="font-tech font-bold text-slate-900 text-sm">Timer & Soal HOTS</h4>
+          <p class="text-xs text-slate-500 font-medium leading-normal">
+            Durasi timer adaptif (30s–60s) dengan tingkat kesulitan Mudah, Sedang, hingga HOTS.
+          </p>
         </div>
-        <div>
-          <h4 class="text-amber-300 font-extrabold text-sm uppercase tracking-wider mb-1">
-            💡 Kata Mutiara & Inspirasi Belajar Informatika
-          </h4>
-          <p id="summary-quote" class="text-slate-200 text-sm md:text-base italic leading-relaxed">
-            "Satu-satunya cara untuk melakukan pekerjaan hebat adalah dengan mencintai apa yang kamu pelajari. Jangan pernah takut mencoba dan membuat kesalahan, karena dari sanalah logika terbaik diciptakan!"
+
+        <div class="tech-card rounded-2xl p-4 space-y-2 border border-blueprint-100 hover:border-blueprint-300 transition">
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center font-bold text-lg">
+            👥
+          </div>
+          <h4 class="font-tech font-bold text-slate-900 text-sm">Panel Absen Siswa</h4>
+          <p class="text-xs text-slate-500 font-medium leading-normal">
+            Integrasi 9 World Kelas (9A–9I) dan 32 tombol nomor absen interaktif untuk giliran siswa.
+          </p>
+        </div>
+
+        <div class="tech-card rounded-2xl p-4 space-y-2 border border-blueprint-100 hover:border-blueprint-300 transition">
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-lg">
+            📊
+          </div>
+          <h4 class="font-tech font-bold text-slate-900 text-sm">Rekapitulasi Nilai</h4>
+          <p class="text-xs text-slate-500 font-medium leading-normal">
+            Panel <i>Teacher Mode</i> untuk melihat tabel akumulasi XP dan Rank seluruh siswa secara real-time.
           </p>
         </div>
       </div>
 
-      <!-- TABEL REKAP NILAI SISWA (ABSEN 01 - 32) -->
-      <div class="max-h-[45vh] overflow-y-auto rounded-2xl border border-slate-800 mb-6 bg-slate-900/60">
-        <table class="w-full text-left border-collapse text-xs md:text-sm">
-          <thead class="bg-slate-900/90 text-cyan-300 uppercase tracking-wider sticky top-0 z-10 font-bold border-b border-slate-800">
-            <tr>
-              <th class="p-3.5 text-center">Absen</th>
-              <th class="p-3.5">Status Partisipasi</th>
-              <th class="p-3.5 text-center">Dijawab</th>
-              <th class="p-3.5 text-center">Benar</th>
-              <th class="p-3.5 text-center">Total Poin</th>
-            </tr>
-          </thead>
-          <tbody id="summary-table-body" class="divide-y divide-slate-800/60 text-slate-300">
-            <!-- Generated by JS -->
-          </tbody>
-        </table>
+      <div class="pt-2 flex flex-col sm:flex-row gap-4 w-full max-w-xs sm:max-w-md justify-center">
+        <button onclick="goToWorlds()" class="w-full py-4 px-8 rounded-2xl bg-gradient-to-r from-blueprint-600 to-cyan-500 hover:from-blueprint-700 hover:to-cyan-600 text-white font-tech font-bold text-base md:text-lg shadow-lg shadow-blueprint-500/25 transition transform active:scale-95 flex items-center justify-center gap-3">
+          <i class="fa-solid fa-circle-play text-xl"></i>
+          <span>MULAI MISI (START)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: SELECT DIGITAL WORLD (CLASSES 9A - 9I) -->
+    <section id="screen-worlds" class="hidden space-y-6">
+      <div class="text-center space-y-2 max-w-xl mx-auto">
+        <span class="text-xs font-tech font-bold text-blueprint-600 tracking-widest uppercase">STEP 01 · SELECT DIGITAL WORLD</span>
+        <h2 class="text-2xl md:text-3xl font-tech font-extrabold text-slate-900">
+          CHOOSE YOUR <span class="text-blueprint-500">DIGITAL WORLD</span>
+        </h2>
       </div>
 
-    </div>
-  </div>
+      <div id="worlds-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Dynamically Populated Classes 9A-9I -->
+      </div>
+    </section>
 
+    <!-- SCREEN 3: QUIZ WORKSPACE -->
+    <section id="screen-quiz" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- LEFT COLUMN: QUESTION CARD & OPTIONS -->
+        <div class="lg:col-span-8 space-y-4">
+          <div class="tech-card rounded-3xl p-6 md:p-8 space-y-5 relative overflow-hidden">
+            
+            <!-- TIMER & PROGRESS BAR & DIFFICULTY BADGE -->
+            <div class="space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-tech font-bold text-slate-500">
+                <span class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-blueprint-500 animate-ping"></span>
+                  SOAL <span id="current-q-num" class="text-blueprint-600">1</span> DARI <span id="total-q-num">100</span>
+                </span>
 
-  <!-- ================= JAVASCRIPT APP ENGINE ================= -->
+                <!-- DIFFICULTY BADGE -->
+                <div id="difficulty-badge" class="px-3 py-1 rounded-full font-tech font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                  <!-- Dynamic Difficulty Label -->
+                </div>
+                
+                <!-- TIMER BADGE -->
+                <div id="timer-badge" class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 font-tech font-bold text-sm flex items-center gap-2 transition-all">
+                  <i class="fa-solid fa-stopwatch"></i>
+                  <span id="timer-text">30s</span>
+                </div>
+              </div>
+
+              <!-- TIMER PROGRESS BAR -->
+              <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div id="timer-bar" class="h-full bg-blueprint-500 transition-all duration-1000 w-full"></div>
+              </div>
+            </div>
+
+            <!-- QUESTION TEXT -->
+            <div class="pt-1">
+              <h3 id="question-text" class="text-base md:text-xl font-bold text-slate-900 leading-relaxed">
+                Loading question...
+              </h3>
+            </div>
+
+            <!-- OPTIONS CONTAINER -->
+            <div id="options-container" class="grid grid-cols-1 gap-3 pt-1">
+              <!-- Dynamically populated options -->
+            </div>
+
+            <!-- FEEDBACK BOX -->
+            <div id="feedback-box" class="hidden p-5 rounded-2xl border transition-all space-y-2">
+              <div class="flex items-center gap-2 font-tech font-bold text-sm md:text-base" id="feedback-title">
+                <i id="feedback-icon" class="fa-solid"></i>
+                <span id="feedback-heading">HASIL</span>
+              </div>
+              <p id="feedback-text" class="text-xs md:text-sm font-medium leading-relaxed">
+                Penjelasan soal...
+              </p>
+            </div>
+
+            <!-- FOOTER ACTION -->
+            <div class="flex justify-end pt-2 border-t border-slate-100">
+              <button id="next-btn" onclick="nextQuestion()" disabled class="px-6 py-3 bg-slate-200 text-slate-400 font-tech font-bold text-xs md:text-sm rounded-xl cursor-not-allowed transition flex items-center gap-2 uppercase tracking-wider">
+                <span>PERTANYAAN SELANJUTNYA</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: ABSEN STUDENT GRID -->
+        <div class="lg:col-span-4 space-y-4">
+          <div class="tech-card rounded-3xl p-5 md:p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span class="text-[10px] font-tech font-bold text-blueprint-600 tracking-wider uppercase">PANEL SISWA MAJU</span>
+                <h4 class="text-base font-tech font-bold text-slate-900">NOMOR ABSEN (1-32)</h4>
+              </div>
+              <span id="selected-absen-badge" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 font-tech font-bold text-xs transition-all">
+                BELUM DIPILIH
+              </span>
+            </div>
+
+            <!-- ABSEN GRID (32 BUTTONS) -->
+            <div id="absen-grid" class="grid grid-cols-4 sm:grid-cols-8 lg:grid-cols-4 gap-2 max-h-[360px] overflow-y-auto pr-1">
+              <!-- Dynamically Populated Absen 1-32 -->
+            </div>
+
+            <div class="pt-2 text-[11px] font-tech font-medium text-slate-400 text-center border-t border-slate-100">
+              <i class="fa-solid fa-circle-info text-blueprint-400 mr-1"></i> Sentuh nomor absen siswa yang maju untuk mengaktifkan timer.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SCREEN 4: TEACHER MODE RECAP -->
+    <section id="screen-teacher" class="hidden space-y-6">
+      <div class="tech-card rounded-3xl p-6 md:p-8 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <span class="text-xs font-tech font-bold text-blueprint-600 tracking-wider uppercase">REKAPITULASI AKUMULASI XP & RANK</span>
+            <h2 class="text-2xl font-tech font-bold text-slate-900">DAFTAR NILAI SISWA PER KELAS</h2>
+          </div>
+          <button onclick="goToHome()" class="px-4 py-2 rounded-xl bg-blueprint-50 text-blueprint-600 border border-blueprint-200 font-tech font-bold text-xs hover:bg-blueprint-100 transition self-start sm:self-auto">
+            <i class="fa-solid fa-xmark mr-1"></i> TUTUP REKAP
+          </button>
+        </div>
+
+        <div id="teacher-recap-content" class="overflow-x-auto">
+          <!-- Dynamically populated scores table -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white/60 backdrop-blur-md border-t border-blueprint-100 py-3 px-4 text-center text-xs font-tech font-medium text-slate-400">
+    INFORMATICS QUEST IFP EDITION · FASE D SMP · TOTAL BANK 100 SOAL
+  </footer>
+
   <script>
-    // Web Audio API Synthesizer
+    /* ==========================================
+       RANKS & CATEGORIES SYSTEM
+       ========================================== */
+    function getRank(xp) {
+      if (xp >= 100) return { title: "CYBER LEGEND", icon: "fa-crown", emoji: "👑", badgeClass: "bg-amber-100 text-amber-700 border-amber-300" };
+      if (xp >= 80) return { title: "DATA MASTER", icon: "fa-database", emoji: "📊", badgeClass: "bg-purple-100 text-purple-700 border-purple-300" };
+      if (xp >= 50) return { title: "PROBLEM SOLVER", icon: "fa-puzzle-piece", emoji: "🧩", badgeClass: "bg-cyan-100 text-cyan-700 border-cyan-300" };
+      if (xp >= 30) return { title: "EXPLORER", icon: "fa-compass", emoji: "🧭", badgeClass: "bg-blue-100 text-blue-700 border-blue-300" };
+      return { title: "NEWBIE", icon: "fa-seedling", emoji: "🐣", badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-300" };
+    }
+
+    /* ==========================================
+       BANK 100 SOAL FASE D INFORMATIKA SMP
+       ========================================== */
+    const rawQuestions = [
+      /* 1-10: SISTEM KOMPUTER, HARDWARE, SOFTWARE, BRAINWARE & PROCESS */
+      { q: "Manakah di bawah ini yang merupakan unit pemrosesan utama (otak) dari sebuah komputer?", options: ["RAM", "CPU (Central Processing Unit)", "Harddisk", "Power Supply"], correct: 1, difficulty: "easy", exp: "CPU berfungsi sebagai otak utama komputer untuk mengeksekusi instruksi dan pemrosesan data." },
+      { q: "Komponen memori komputer yang bersifat sementara (volatile) dan hilang saat listrik padam adalah...", options: ["ROM", "Flashdisk", "RAM (Random Access Memory)", "SSD"], correct: 2, difficulty: "easy", exp: "RAM menyimpan data sementara yang aktif digunakan oleh sistem, bersifat volatile (hilang saat mati listrik)." },
+      { q: "Seseorang yang merancang, menulis, dan menguji kode program komputer disebut sebagai...", options: ["System Analyst", "Programmer", "Network Administrator", "Database Operator"], correct: 1, difficulty: "easy", exp: "Programmer adalah brainware yang merancang dan menulis sintaks instruksi pemrograman." },
+      { q: "Siklus utama dalam kerja komputer secara berurutan adalah...", options: ["Input -> Output -> Process", "Input -> Process -> Output -> Storage", "Process -> Input -> Output", "Output -> Input -> Process"], correct: 1, difficulty: "easy", exp: "Siklus pemrosesan data komputer dimulai dari Input, diolah pada Process, menghasilkan Output, dan disimpan di Storage." },
+      { q: "Manakah yang tergolong perangkat masukan (input device)?", options: ["Monitor, Speaker, Printer", "Keyboard, Mouse, Scanner", "Proyektor, Harddisk, CPU", "Plotter, Headphones, GPU"], correct: 1, difficulty: "easy", exp: "Keyboard, Mouse, dan Scanner digunakan untuk memasukkan perintah atau data ke komputer." },
+      { q: "Perangkat lunak sistem operasi yang mengelola seluruh sumber daya hardware komputer adalah...", options: ["Microsoft Excel", "Windows / Linux", "Google Chrome", "Adobe Photoshop"], correct: 1, difficulty: "easy", exp: "Windows, Linux, dan macOS merupakan sistem operasi (Operating System) pemberi landasan kerja hardware." },
+      { q: "Perangkat keras yang bertugas mengolah grafis dan visual ke layar monitor adalah...", options: ["Sound Card", "VGA / GPU (Graphics Processing Unit)", "LAN Card", "ROM"], correct: 1, difficulty: "easy", exp: "GPU/VGA menangani pembuatan gambar, animasi, dan pemrosesan piksel visual." },
+      { q: "[HOTS PROCESS] Sebuah komputer mengalami kelemotan saat membuka 10 aplikasi sekaligus. Setelah diperiksa, pemakaian RAM mencapai 99%. Solusi hardware paling efektif adalah...", options: ["Mengganti monitor yang lebih besar", "Menambah kapasitas RAM (Upgrade RAM)", "Mengganti keyboard mechanical", "Membersihkan kipas pendingin casing"], correct: 1, difficulty: "medium", exp: "Tingginya konsumsi RAM membuat sistem kehabisan tempat kerja sementara; menambah RAM mengatasi hambatan ini." },
+      { q: "[HOTS HARDWARE] Mana pasangan fungsi perangkat keras berikut yang BENAR?", options: ["ALU: Memuat sistem operasi saat booting", "SSD: Penyimpan data permanen kecepatan tinggi", "ROM: Tempat penyimpanan sementara file yang terbuka", "Power Supply: Menghitung instruksi logika aritmatika"], correct: 1, difficulty: "medium", exp: "SSD (Solid State Drive) adalah media penyimpanan non-volatile permanen dengan kecepatan transfer tinggi." },
+      { q: "Perangkat BIOS pada komputer tersimpan secara permanen pada memori jenis...", options: ["RAM", "Cache Memory", "ROM (Read Only Memory)", "Virtual Memory"], correct: 2, difficulty: "easy", exp: "ROM menyimpan instruksi dasar booting (BIOS/UEFI) dan tidak hilang meski listrik dimatikan." },
+
+      /* 11-20: KONVERSI BILANGAN (BINER, DESIMAL, HEKSADESIMAL) */
+      { q: "Konversikan bilangan biner (1010)₂ ke dalam sistem bilangan desimal!", options: ["8", "10", "12", "14"], correct: 1, difficulty: "easy", exp: "(1×2³) + (0×2²) + (1×2¹) + (0×2⁰) = 8 + 0 + 2 + 0 = 10." },
+      { q: "Berapakah hasil konversi biner (1101)₂ ke desimal?", options: ["11", "13", "15", "17"], correct: 1, difficulty: "easy", exp: "(1×8) + (1×4) + (0×2) + (1×1) = 8 + 4 + 0 + 1 = 13." },
+      { q: "Bilangan desimal 15₁₀ jika dikonversi ke sistem heksadesimal melambangkan huruf...", options: ["E", "F", "D", "A"], correct: 1, difficulty: "easy", exp: "Heksadesimal menggunakan 0-9 dan A-F. Angka 10=A, 11=B, 12=C, 13=D, 14=E, 15=F." },
+      { q: "Konversikan angka desimal 20₁₀ ke dalam bentuk biner!", options: ["(10100)₂", "(10010)₂", "(11000)₂", "(10101)₂"], correct: 0, difficulty: "medium", exp: "20 / 2 = 10 sisa 0; 10 / 2 = 5 sisa 0; 5 / 2 = 2 sisa 1; 2 / 2 = 1 sisa 0; 1 / 2 = 0 sisa 1 -> 10100₂." },
+      { q: "Nilai heksadesimal 1A₁₆ setara dengan bilangan desimal sebesar...", options: ["26", "24", "16", "28"], correct: 0, difficulty: "medium", exp: "1A₁₆ = (1×16¹) + (A×16⁰) = 16 + 10 = 26." },
+      { q: "Sistem bilangan biner berbasis...", options: ["Basis 2 (0 dan 1)", "Basis 8 (0-7)", "Basis 10 (0-9)", "Basis 16 (0-F)"], correct: 0, difficulty: "easy", exp: "Sistem biner berbasis 2 dengan digit 0 dan 1." },
+      { q: "Konversikan biner (1111)₂ ke desimal!", options: ["14", "15", "16", "12"], correct: 1, difficulty: "easy", exp: "8 + 4 + 2 + 1 = 15." },
+      { q: "Bilangan desimal 255₁₀ dalam heksadesimal dituliskan sebagai...", options: ["EF", "FF", "AA", "100"], correct: 1, difficulty: "medium", exp: "255 / 16 = 15 sisa 15. Di melambangkan F, maka hasilnya FF₁₆." },
+      { q: "[HOTS BINARY] Sebuah sakelar 8-bit mewakili nilai 11001000₂. Berapakah total nilai desimal sakelar tersebut?", options: ["200", "192", "208", "216"], correct: 0, difficulty: "hard", exp: "128 + 64 + 0 + 0 + 8 + 0 + 0 + 0 = 200." },
+      { q: "[HOTS HEX] Kode warna web #FF0000 menghasilkan warna merah murni. Angka FF₁₆ pada nilai warna tersebut sama dengan desimal...", options: ["100", "255", "512", "1024"], correct: 1, difficulty: "medium", exp: "Nilai maksimum 1 byte heksadesimal FF₁₆ = 255." },
+
+      /* 21-30: GERBANG LOGIKA */
+      { q: "Gerbang logika yang menghasilkan output TRUE (1) HANYA JIKA kedua input bernilai TRUE (1) adalah...", options: ["OR", "AND", "NOT", "XOR"], correct: 1, difficulty: "easy", exp: "Gerbang AND membutuhkan semua input 1 untuk mengaktifkan output 1." },
+      { q: "Jika input A=1 dan B=0 dimasukkan ke gerbang OR, maka output yang dihasilkan adalah...", options: ["0", "1", "Error", "Undefined"], correct: 1, difficulty: "easy", exp: "Gerbang OR menghasilkan 1 jika salah satu atau seluruh input bernilai 1 (1 OR 0 = 1)." },
+      { q: "Gerbang NOT berfungsi sebagai...", options: ["Penjumlah logika", "Pengali logika", "Inverter / Pembalik nilai", "Pembagi logika"], correct: 2, difficulty: "easy", exp: "Gerbang NOT membalikkan nilai input: 1 menjadi 0, dan 0 menjadi 1." },
+      { q: "Gerbang XOR (Exclusive OR) menghasilkan output 1 apabila...", options: ["Kedua input bernilai sama", "Kedua input bernilai berbeda", "Kedua input bernilai 0", "Input A bernilai 0"], correct: 1, difficulty: "medium", exp: "XOR hanya bernilai 1 jika kedua masukan berbeda (0,1 atau 1,0)." },
+      { q: "Gerbang NAND merupakan kombinasi dari gerbang...", options: ["NOT + AND", "NOT + OR", "NOT + XOR", "AND + OR"], correct: 0, difficulty: "easy", exp: "NAND singkatan dari NOT-AND (kebalikan dari output gerbang AND)." },
+      { q: "Gerbang NOR akan menghasilkan output 1 HANYA JIKA...", options: ["Kedua input bernilai 1", "Kedua input bernilai 0", "Salah satu input bernilai 1", "Input A=1 dan B=0"], correct: 1, difficulty: "medium", exp: "NOR adalah NOT-OR. Nilai OR(0,0)=0, di-NOT-kan menjadi 1." },
+      { q: "[HOTS LOGIC] Diberikan ekspresi logika: (1 AND 0) OR (NOT 0). Hasil akhir ekspresi tersebut adalah...", options: ["0", "1", "Null", "Error"], correct: 1, difficulty: "hard", exp: "(1 AND 0) = 0. (NOT 0) = 1. Maka 0 OR 1 = 1." },
+      { q: "[HOTS LOGIC] Sistem alarm keamanan rumah menyala (1) jika sensor jendela (A) ATAU sensor pintu (B) mendeteksi gerakan, TETAPI tombol mati (C) TIDAK ditekan (NOT C). Rumus logikanya adalah...", options: ["(A AND B) OR C", "(A OR B) AND (NOT C)", "(A AND B) AND C", "(A OR C) AND B"], correct: 1, difficulty: "hard", exp: "Sensor A atau B dinyalakan (A OR B), dikombinasikan dengan kondisi tombol tidak aktif (AND NOT C)." },
+      { q: "Tabel kebenaran yang menghasilkan output 0 HANYA JIKA semua input 0 adalah gerbang...", options: ["AND", "OR", "XOR", "NAND"], correct: 1, difficulty: "medium", exp: "Gerbang OR menghasilkan 0 hanya ketika semua masukan bernilai 0." },
+      { q: "Hasil dari (1 XOR 1) adalah...", options: ["1", "0", "2", "Undefined"], correct: 1, difficulty: "easy", exp: "XOR menghasilkan 0 jika kedua masukan memiliki nilai yang sama." },
+
+      /* 31-40: BERPIKIR KOMPUTASIONAL (DEKOMPOSISI, POLA, ABSTRAKSI, ALGORITMA) */
+      { q: "Menguraikan masalah kompleks menjadi bagian-bagian kecil yang lebih mudah dikelola dinamakan...", options: ["Abstraksi", "Dekomposisi", "Pengenalan Pola", "Algoritma"], correct: 1, difficulty: "easy", exp: "Dekomposisi memecah masalah besar menjadi sub-masalah kecil." },
+      { q: "Proses mengeliminasi detail informasi yang tidak penting dan fokus pada informasi utama disebut...", options: ["Abstraksi", "Algoritma", "Dekomposisi", "Pola"], correct: 0, difficulty: "easy", exp: "Abstraksi menyaring hal non-esensial dan mempertahankan elemen kunci." },
+      { q: "Urutan langkah-langkah logis dan sistematis untuk menyelesaikan suatu masalah disebut...", options: ["Variabel", "Algoritma", "Syntax", "Pseudocode"], correct: 1, difficulty: "easy", exp: "Algoritma adalah serangkaian instruksi terstruktur penyelesaian masalah." },
+      { q: "Melihat kesamaan atau tren dalam serangkaian data atau permasalahan merupakan tahap...", options: ["Abstraksi", "Pengenalan Pola (Pattern Recognition)", "Dekomposisi", "Debugging"], correct: 1, difficulty: "easy", exp: "Pengenalan pola menganalisis kemiripan pola data sebelumnya untuk prediksi solusi." },
+      { q: "[HOTS BK] Dokter menganalisis penyakit pasien dengan menanyakan gejala, mengukur suhu tubuh, dan mengabaikan warna baju pasien. Proses mengabaikan warna baju pasien dinamakan...", options: ["Dekomposisi", "Abstraksi", "Algoritma", "Pengkodean"], correct: 1, difficulty: "medium", exp: "Mengabaikan detail tak relevan (warna baju) saat mendiagnosis penyakit adalah bentuk Abstraksi." },
+      { q: "[HOTS BK] Tim pembuat aplikasi membagi tugas: Budi membuat tampilan (UI), Ani mengolah database, dan Cici menguji keamanan. Pendekatan BK ini menerapkan...", options: ["Dekomposisi", "Abstraksi", "Algoritma", "Iterasi"], correct: 0, difficulty: "medium", exp: "Membagi pekerjaan besar menjadi bagian-bagian spesifik tim adalah Dekomposisi." },
+      { q: "[HOTS NUMERASI BK] Untuk mencapai lantai 5, sebuah lif hanya berhenti di lantai bernilai kelipatan 2 atau 3. Urutan lantai yang dikunjungi lif dari dasar adalah...", options: ["1, 2, 3, 4, 5", "2, 3, 4", "2, 4, 5", "3, 5"], correct: 1, difficulty: "hard", exp: "Lantai antara 1-5 yang merupakan kelipatan 2 atau 3 adalah 2 (2x1), 3 (3x1), dan 4 (2x2)." },
+      { q: "Representasi visual berbentuk diagram dengan simbol geometris untuk menggambarkan alur algoritma disebut...", options: ["Flowchart", "Pseudocode", "Mindmap", "Wireframe"], correct: 0, difficulty: "easy", exp: "Flowchart mengambarkan alur langkah algoritma menggunakan grafik/simbol standar." },
+      { q: "Simbol belah ketupat (decision) pada flowchart berfungsi untuk...", options: ["Memulai/mengakhiri program", "Keputusan / Pengujian Kondisi", "Input/Output data", "Proses perhitungan"], correct: 1, difficulty: "easy", exp: "Simbol decision (belah ketupat) menunjukkan cabang keputusan Ya/Tidak." },
+      { q: "Penulisan alur algoritma menggunakan bahasa manusia yang menyerupai struktur kode pemrograman disebut...", options: ["Flowchart", "Pseudocode", "Assembly", "Machine Code"], correct: 1, difficulty: "easy", exp: "Pseudocode adalah penulisan teks informal menyerupai struktur bahasa pemrograman." },
+
+      /* 41-50: JARANGAN KOMPUTER (LAN, MAN, WAN, TOPOLOGI, INTERNET) */
+      { q: "Jaringan komputer berkangkupan lokal seperti area dalam satu laboratorium sekolah dinamakan...", options: ["LAN (Local Area Network)", "MAN (Metropolitan Area Network)", "WAN (Wide Area Network)", "PAN (Personal Area Network)"], correct: 0, difficulty: "easy", exp: "LAN memiliki cakupan geografis kecil seperti laboratorium, ruangan, atau satu gedung." },
+      { q: "Jaringan komputer yang menghubungkan antarkota dalam satu provinsi dinamakan...", options: ["LAN", "MAN (Metropolitan Area Network)", "WAN", "WLAN"], correct: 1, difficulty: "easy", exp: "MAN mencakup wilayah perkotaan atau antarkota dalam satu kawasan industri/provinsi." },
+      { q: "Jaringan global antar-negara dan benua yang terhubung di seluruh dunia adalah...", options: ["WAN / Internet", "LAN", "MAN", "Intranet"], correct: 0, difficulty: "easy", exp: "WAN/Internet mencakup geografis global antarnegara dan benua." },
+      { q: "Topologi jaringan yang menggunakan satu kabel pusat (backbone) sebagai media transmisi adalah topologi...", options: ["Star", "Bus", "Ring", "Mesh"], correct: 1, difficulty: "easy", exp: "Topologi Bus dihubungkan melalui kabel tunggal utama (backbone)." },
+      { q: "Topologi jaringan di mana semua komputer terhubung ke satu perangkat pusat (Switch/Hub) dinamakan topologi...", options: ["Bus", "Star", "Ring", "Tree"], correct: 1, difficulty: "easy", exp: "Topologi Star memusatkan sambungan ke perangkat Switch/Hub pusat." },
+      { q: "Perangkat jaringan yang berfungsi mengarahkan paket data antarnetwork yang berbeda alamat IP adalah...", options: ["Switch", "Router", "Kabel UTP", "Modem"], correct: 1, difficulty: "medium", exp: "Router menentukan rute jaringan terbaik dan menghubungkan dua jaringan yang berbeda subnet/IP." },
+      { q: "Protokol keamanan Wi-Fi yang paling aman dan modern saat ini adalah...", options: ["WEP", "WPA1", "WPA3", "HTTP"], correct: 2, difficulty: "medium", exp: "WPA3 menawarkan enkripsi nirkabel paling kuat dibanding generasi pendahulunya." },
+      { q: "[HOTS NETWORK] Jika salah satu kabel komputer pada topologi Star terputus, apa yang terjadi pada komputer lain dalam jaringan?", options: ["Seluruh jaringan mati total", "Komputer lain tetap berfungsi normal", "Komputer lain akan restart sendiri", "Kabel pusat akan terbakar"], correct: 1, difficulty: "medium", exp: "Pada topologi Star, kerusakan satu kabel klien tidak mengganggu koneksi komputer klien lainnya." },
+      { q: "[HOTS IP ADDRESS] Manakah dari format penulisan IP Address IPv4 berikut yang VALID?", options: ["192.168.1.256", "192.168.1.50", "300.200.100.1", "192.168.1"], correct: 1, difficulty: "hard", exp: "Setiap segmen IPv4 bernilai antara 0-255. Angka 256 dan 300 di luar jangkauan valid." },
+      { q: "Perangkat keras yang mengubah sinyal digital menjadi sinyal analog (dan sebaliknya) untuk jaringan internet adalah...", options: ["Modem", "Repeater", "LAN Card", "Bridge"], correct: 0, difficulty: "easy", exp: "Modem (Modulator Demodulator) mengonversi sinyal analog dan digital." },
+
+      /* 51-60: PEMROGRAMAN DASAR & SCRATCH */
+      { q: "Pada aplikasi Scratch, kelompok blok berwarna kuning yang mengatur kapan program mulai berjalan (seperti 'when green flag clicked') adalah...", options: ["Motion", "Events", "Control", "Sensing"], correct: 1, difficulty: "easy", exp: "Blok Events (kuning) menangani pemicu atau jalannya aksi program." },
+      { q: "Blok Scratch yang digunakan untuk melakukan perulangan (looping) perintah adalah...", options: ["if-then", "forever / repeat", "move 10 steps", "say Hello"], correct: 1, difficulty: "easy", exp: "Blok 'forever' dan 'repeat' berada di kategori Control untuk perulangan." },
+      { q: "Wadah dalam ingatan komputer yang digunakan untuk menyimpan nilai data yang dapat berubah-ubah dinamakan...", options: ["Konstanta", "Variabel", "Fungsi", "Operator"], correct: 1, difficulty: "easy", exp: "Variabel menyimpan nilai data yang nilainya dapat dimodifikasi saat program berjalan." },
+      { q: "Struktur percabangan dalam pemrograman umumnya menggunakan perintah...", options: ["IF - THEN - ELSE", "FOR - TO - DO", "WHILE - DO", "INPUT - OUTPUT"], correct: 0, difficulty: "easy", exp: "IF-THEN-ELSE mengeksekusi blok instruksi berdasarkan pengujian kondisi logis." },
+      { q: "Karakter atau animasi yang dapat digerakkan dan diberi perintah pada Scratch disebut...", options: ["Stage", "Backdrop", "Sprite", "Costume"], correct: 2, difficulty: "easy", exp: "Sprite adalah objek gambar/karakter interaktif pada Scratch." },
+      { q: "Proses mencari dan memperbaiki kesalahan (error) pada kode program dinamakan...", options: ["Compiling", "Debugging", "Encoding", "Executing"], correct: 1, difficulty: "easy", exp: "Debugging adalah proses melacak dan memperbaiki bugs/kesalahan dalam script." },
+      { q: "[HOTS SCRATCH] Sebuah Sprite Scratch memiliki posisi X=0, Y=0. Jika diberi perintah 'move 50 steps' dan 'change y by 30', posisi akhir Sprite adalah...", options: ["X=50, Y=30", "X=30, Y=50", "X=50, Y=50", "X=0, Y=80"], correct: 0, difficulty: "hard", exp: "Move 50 menambah posisi X sebesar 50. Change Y by 30 menambah Y sebesar 30 -> (50, 30)." },
+      { q: "[HOTS PROGRAMMING] Jika nilai `score = 75`, kondisi `IF score >= 80 THEN Print 'Lulus' ELSE Print 'Remidi'`. Output yang muncul adalah...", options: ["Lulus", "Remidi", "Error", "75"], correct: 1, difficulty: "medium", exp: "Karena 75 kurang dari 80 (FALSE), maka program menjalankan kondisi ELSE (Remidi)." },
+      { q: "Tipe data yang hanya menyimpan dua nilai kemungkinan (True atau False) dinamakan...", options: ["Integer", "String", "Boolean", "Float"], correct: 2, difficulty: "easy", exp: "Tipe data Boolean hanya memiliki dua nilai: True (1) atau False (0)." },
+      { q: "Perintah `print()` pada bahasa pemrograman Python berfungsi untuk...", options: ["Menerima masukan keyboard", "Menampilkan keluaran di layar", "Menghapus variabel", "Menghentikan program"], correct: 1, difficulty: "easy", exp: "Fungsi print() digunakan untuk mencetak teks/output ke konsol layar." },
+
+      /* 61-70: ANALISIS DATA & SPREADSHEET (EXCEL) */
+      { q: "Fungsi dalam Microsoft Excel yang digunakan untuk menjumlahkan sekumpulan angka pada sel adalah...", options: ["AVERAGE", "SUM", "COUNT", "MAX"], correct: 1, difficulty: "easy", exp: "Fungsi =SUM() digunakan untuk menghitung total penjumlahan data numerik." },
+      { q: "Untuk menghitung nilai rata-rata dari sekelompok data di spreadsheet digunakan rumus...", options: ["=SUM()", "=AVERAGE()", "=MIN()", "=COUNT()"], correct: 1, difficulty: "easy", exp: "=AVERAGE() menghitung nilai rata-rata aritmatika pada deret sel." },
+      { q: "Fungsi `=COUNTIF(A1:A10, \">70\")` pada spreadsheet berfungsi untuk...", options: ["Menjumlahkan angka di atas 70", "Menghitung banyaknya sel yang bernilai lebih dari 70", "Mencari angka terbesar 70", "Mengalikan sel dengan angka 70"], correct: 1, difficulty: "medium", exp: "COUNTIF menghitung jumlah sel yang memenuhi kriteria tertentu (>70)." },
+      { q: "Tanda yang WAJIB diketikkan pertama kali saat menuliskan rumus fungsi di Excel adalah...", options: ["#", "@", "=", "+"], correct: 2, difficulty: "easy", exp: "Penulisan rumus/fungsi di Excel wajib diawali dengan tanda sama dengan (=)." },
+      { q: "[HOTS EXCEL] Sel A1=10, A2=20, A3=30. Jika pada sel A4 dimasukkan rumus `=SUM(A1:A3)/COUNT(A1:A3)`, hasil keluaran sel A4 adalah...", options: ["20", "60", "30", "10"], correct: 0, difficulty: "hard", exp: "SUM(A1:A3) = 60. COUNT(A1:A3) = 3 data. Maka 60 / 3 = 20." },
+      { q: "Pertemuan antara baris (Row) dan kolom (Column) pada spreadsheet dinamakan...", options: ["Range", "Cell (Sel)", "Worksheet", "Ribbon"], correct: 1, difficulty: "easy", exp: "Pertemuan kolom (A, B...) dan baris (1, 2...) disebut Cell (misal: A1)." },
+      { q: "Untuk mencari nilai data tertinggi/terbesar dalam suatu jangkauan sel digunakan fungsi...", options: ["=MIN()", "=MAX()", "=LARGE()", "=SUM()"], correct: 1, difficulty: "easy", exp: "=MAX() mengambil nilai numerik tertinggi dari rentang sel." },
+      { q: "Grafik yang paling cocok untuk menunjukkan proporsi persentase dari suatu total data adalah...", options: ["Line Chart", "Pie Chart (Grafik Lingkaran)", "Bar Chart", "Scatter Plot"], correct: 1, difficulty: "easy", exp: "Pie Chart sangat efektif memperlihatkan kontribusi bagian terhadap seratus persen." },
+      { q: "Simbol `$` pada referensi sel Excel (`$A$1`) berfungsi untuk...", options: ["Mengubah format menjadi mata uang Dolar", "Kunci referensi sel mutlak (Absolute Reference)", "Menghapus isi sel", "Menyembunyikan sel"], correct: 1, difficulty: "medium", exp: "Tanda $ mengunci kolom dan baris agar tidak bergeser saat rumus disalin." },
+      { q: "[HOTS DATA] Sebuah toko memiliki daftar 1.000 transaksi. Untuk menyaring hanya transaksi kota 'Jakarta', fitur Excel yang tepat adalah...", options: ["Sort Smallest to Largest", "Filter", "Conditional Formatting", "Merge & Center"], correct: 1, difficulty: "medium", exp: "Fitur AutoFilter menyaring data berdasarkan kriteria spesifik seperti nama kota." },
+
+      /* 71-80: DAMPAK SOSIAL INFORMATIKA & CYBERBULLYING */
+      { q: "Tindakan perundungan, intimidasi, atau pelecehan yang dilakukan melalui media digital/sosial media disebut...", options: ["Cyberstalking", "Cyberbullying", "Phishing", "Hacking"], correct: 1, difficulty: "easy", exp: "Cyberbullying adalah perundungan di dunia maya yang merugikan mental/emosional korban." },
+      { q: "Jejak aktivitas digital seseorang yang tertinggal saat menggunakan internet dinamakan...", options: ["Digital Footprint (Jejak Digital)", "Digital History", "Cookies Log", "Cache Data"], correct: 0, difficulty: "easy", exp: "Jejak digital (Digital Footprint) mencakup komentar, unggahan, dan riwayat yang sulit dihapus total." },
+      { q: "Kejahatan penipuan online untuk mencuri informasi sensitif (seperti password/OTP) via link palsu disebut...", options: ["Spoofing", "Phishing", "Ransomware", "Spamming"], correct: 1, difficulty: "easy", exp: "Phishing memancing korban memberikan kredensial rahasia melalui situs/pesan tiruan." },
+      { q: "Manakah tindakan beretika dalam berkomunikasi di media sosial?", options: ["Menyebarkan berita tanpa verifikasi kebenaran", "Menghargai pendapat orang lain dan tidak memakai bahasa kasar", "Mengunggah foto pribadi orang lain tanpa izin", "Menulis komentar berisi ujaran kebencian"], correct: 1, difficulty: "easy", exp: "Etika digital (Netiket) mewajibkan tutur kata sopan dan menghormati privasi orang lain." },
+      { q: "[HOTS DSI] Seorang siswa menerima pesan broadcast berisi berita heboh tentang hadiah gratis dengan mengklik tautan tidak dikenal. Tindakan paling BIJAK adalah...", options: ["Langsung meneruskan pesan ke seluruh grup kelas", "Mengklik tautan untuk membuktikan kebenaran", "Mengecek kebenaran berita ke situs resmi dan tidak menyebarkan link mencurigakan", "Mengisi formulir data pribadi di link tersebut"], correct: 2, difficulty: "medium", exp: "Berpikir kritis (Check and Recheck) mencegah menjadi korban phishing atau penyebar hoax." },
+      { q: "Lisensi yang memberikan hak cipta gratis kepada publik untuk menggunakan atau memodifikasi karya dinamakan...", options: ["Proprietary", "Creative Commons / Open Source", "Commercial License", "Copyright Restricted"], correct: 1, difficulty: "easy", exp: "Creative Commons / Open Source mengizinkan penggunaan karya sesuai ketentuan pembagian gratis." },
+      { q: "Undang-Undang di Indonesia yang mengatur informasi serta transaksi elektronik adalah...", options: ["UU Hak Cipta", "UU ITE", "UU HAM", "UU Ketenagakerjaan"], correct: 1, difficulty: "easy", exp: "UU ITE (Informasi dan Transaksi Elektronik) mengatur hukum ranah digital Indonesia." },
+      { q: "[HOTS DSI] Mengapa mengunggah foto KTP atau Tiket Pesawat ke media sosial sangat berbahaya?", options: ["Foto tersebut memakan memori feed media sosial", "Data pribadi sensitif (NIK/Kode Booking) dapat disalahgunakan penjahat siber", "Mengurangi jumlah followers", "Menyebabkan kamera smartphone rusak"], correct: 1, difficulty: "medium", exp: "NIK KTP dan Kode QR tiket menyimpan identitas vital yang bisa dipakai untuk pinjaman online ilegal atau penipuan." },
+      { q: "Jenis malware yang mengunci file korban dan meminta uang tebusan adalah...", options: ["Spyware", "Adware", "Ransomware", "Trojan"], correct: 2, difficulty: "medium", exp: "Ransomware mengenkripsi data korban dan menuntut tebusan uang." },
+      { q: "Kombinasi password yang paling kuat dan aman di bawah ini adalah...", options: ["12345678", "tanggal_lahir", "P@ssw0rd_KuaT99!", "namasaya"], correct: 2, difficulty: "easy", exp: "Password kuat menggabungkan huruf besar, kecil, angka, dan simbol unik unik." },
+
+      /* 81-90: KECERDASAN BUATAN (AI), MACHINE LEARNING & PROMPT */
+      { q: "Teknologi komputer yang memodelkan kemampuan berpikir dan belajar manusia dinamakan...", options: ["Artificial Intelligence (AI)", "Augmented Reality", "Virtual Reality", "Cloud Storage"], correct: 0, difficulty: "easy", exp: "AI (Kecerdasan Buatan) memungkinkan mesin belajar, menalar, dan memecahkan masalah." },
+      { q: "Perintah atau instruksi teks yang kita berikan kepada sistem AI (seperti ChatGPT) disebut...", options: ["Syntax", "Prompt", "Query", "Script"], correct: 1, difficulty: "easy", exp: "Prompt adalah teks panduan/instruksi masukan penggerak generator AI." },
+      { q: "Cabang dari AI di mana mesin dapat belajar dari data secara mandiri tanpa diprogram ulang disebut...", options: ["Machine Learning", "Hard Coding", "Manual System", "Data Entry"], correct: 0, difficulty: "easy", exp: "Machine Learning melatih algoritma menganalisis pola data untuk pembelajaran mandiri." },
+      { q: "[HOTS AI] Sebuah kamera pengawas AI di jalan raya dapat mendeteksi pengendara tanpa helm secara otomatis. Proses AI ini memanfaatkan cabang teknologi...", options: ["Natural Language Processing (NLP)", "Computer Vision", "Robotics Dynamics", "Audio Processing"], correct: 1, difficulty: "hard", exp: "Computer Vision memungkinkan AI mengenali, menganalisis, dan memahami gambar/video." },
+      { q: "Teknologi AI yang fokus pada pemrosesan dan pemahaman bahasa manusia (seperti translator) adalah...", options: ["NLP (Natural Language Processing)", "Computer Vision", "Expert System", "Neural Network"], correct: 0, difficulty: "medium", exp: "NLP memproses teks dan ucapan bahasa manusia agar dipahami komputer." },
+      { q: "[HOTS PROMPT] Agar AI memberikan jawaban rangkuman materi Informatika yang akurat dan terstruktur, teknik penulisan prompt yang paling tepat adalah...", options: ["'Buat rangkuman'", "'Tolong rangkumkan materi Informatika kelas 9 poin demi poin dengan bahasa yang mudah dipahami anak SMP'", "'Kasih tahu informatika'", "'Jawaban singkat informatika'"], correct: 1, difficulty: "medium", exp: "Prompt efektif harus memiliki peran, topik jelas, konteks audiens, dan format keluaran spesifik." },
+      { q: "Risiko utama dari terlalu bergantung pada hasil jawaban AI tanpa diperiksa ulang adalah...", options: ["Komputer langsung mati", "Potensi terkena 'Halusinasi AI' (informasi palsu tampak meyakinkan)", "Baterai HP cepat habis", "Kuota internet mengalir ganda"], correct: 1, difficulty: "medium", exp: "AI dapat menghasilkan fabrikasi informasi salah tetapi terstruktur rapi (AI Hallucination)." },
+      { q: "Sistem rekomendasi video di YouTube atau TikTok yang menyesuaikan minat penonton bekerja menggunakan...", options: ["Algoritma AI Rekomendasi", "Pencarian manual admin", "Jam tayang televisi", "Sistem acak (Random)"], correct: 0, difficulty: "easy", exp: "Algoritma AI menganalisis riwayat tontonan untuk merekomendasikan konten serupa." },
+      { q: "Mobil otonom (self-driving car) yang bisa menyetir sendiri mengombinasikan teknologi...", options: ["Sensor, Computer Vision & Machine Learning", "Kabel Fiber Optik & Excel", "HTML & CSS", "Router & Switch"], correct: 0, difficulty: "medium", exp: "Mobil otonom menggunakan radar, kamera, dan Machine Learning untuk navigasi aman." },
+      { q: "Asisten suara pintar seperti Google Assistant atau Apple Siri menggunakan fitur...", options: ["Speech Recognition & NLP", "Spreadsheet Calculation", "Topologi Mesh", "Gerbang NAND"], correct: 0, difficulty: "easy", exp: "Pengenalan suara (Speech Recognition) mengubah suara manusia menjadi teks yang diproses NLP." },
+
+      /* 91-100: INFORMATIKA DALAM KEHIDUPAN & OTOMASI TERPADU */
+      { q: "Konsep di mana benda-benda sehari-hari dihubungkan ke internet untuk saling bertukar data dinamakan...", options: ["Internet of Things (IoT)", "Cloud Computing", "Big Data", "Virtual Reality"], correct: 0, difficulty: "easy", exp: "IoT (Internet of Things) menghubungkan perangkat fisik (lampu, sensor) ke jaringan internet." },
+      { q: "Layanan penyimpanan dan pengolahan data di server internet tanpa membebani memori lokal dinamakan...", options: ["Cloud Computing", "Local Storage", "Internal Memory", "Flash Disk"], correct: 0, difficulty: "easy", exp: "Cloud Computing (seperti Google Drive) menyimpan data di server Awan terpusat." },
+      { q: "[HOTS IOT] Lampu teras rumah otomatis menyala saat malam hari dan mati saat pagi karena terhubung sensor cahaya dan internet. Ini adalah penerapan...", options: ["Smart Home berbasis IoT", "Sistem Komputer Manual", "Topologi Bus", "Enkripsi Data"], correct: 0, difficulty: "medium", exp: "Otomasi perangkat rumah terhubung jaringan adalah bentuk Smart Home IoT." },
+      { q: "Perangkat penyimpan data sekunder yang memanfaatkan teknologi keping memori tanpa piringan putar adalah...", options: ["SSD (Solid State Drive)", "Harddisk HDD", "Floppy Disk", "CD-ROM"], correct: 0, difficulty: "easy", exp: "SSD menggunakan memori flash non-volatile tanpa komponen mekanis berputar." },
+      { q: "Kemampuan memproses miliaran data acak dari berbagai sumber untuk mendapatkan wawasan bisnis disebut...", options: ["Big Data Analytics", "Input Output Data", "Manual Data", "Word Processing"], correct: 0, difficulty: "medium", exp: "Big Data mengolah volume data mahabesar yang bervariasi dengan kecepatan tinggi." },
+      { q: "[HOTS HOTS] Seorang siswa merancang alat penyiram tanaman otomatis dengan sensor kelembapan tanah dan mikrokontroler Arduino. Bidang Informatika yang memadukan hardware, software, dan lingkungan fisik ini disebut...", options: ["Sistem Komputasi Fisik (Physical Computing)", "Cyber Crime", "Desain Grafis", "Web Development"], correct: 0, difficulty: "hard", exp: "Physical Computing memadukan software dan sensor/aktor perangkat keras dengan dunia nyata." },
+      { q: "Bahasa pemrograman web yang berfungsi mengatur struktur dan fondasi halaman situs adalah...", options: ["HTML", "CSS", "JavaScript", "Python"], correct: 0, difficulty: "easy", exp: "HTML (HyperText Markup Language) mendefinisikan struktur dan konten halaman web." },
+      { q: "Bahasa pemrograman web yang bertugas mengatur tampilan, warna, dan tata letak adalah...", options: ["CSS (Cascading Style Sheets)", "HTML", "C++", "SQL"], correct: 0, difficulty: "easy", exp: "CSS mengatur estetika visual, gaya, warna, dan tata letak elemen web." },
+      { q: "Perangkat keras jaringan yang memancarkan gelombang sinyal nirkabel ke laptop/HP disebut...", options: ["Access Point / Wi-Fi Router", "Kabel UTP", "VGA Card", "Power Bank"], correct: 0, difficulty: "easy", exp: "Access Point memancarkan gelombang radio sinyal Wi-Fi nirkabel." },
+      { q: "[HOTS INTEGRATED] Mengapa integrasi antaraplikasi kantor (misal menyisipkan tabel Excel ke dokumen Word) sangat menguntungkan?", options: ["Data di Word otomatis diperbarui saat data Excel diubah", "Ukuran file menjadi 0 KB", "Komputer tidak membutuhkan listrik lagi", "Warna tabel berubah menjadi emas"], correct: 0, difficulty: "hard", exp: "Fitur OLE (Object Linking and Embedding) menjaga keterhubungan update data antaraplikasi terintegrasi." }
+    ];
+
+    /* WORLD/CLASS DEFINITIONS (9A - 9I) */
+    const worlds = [
+      { id: "9A", name: "TECHNOLOGY", desc: "Perangkat Keras & Otomatisasi Digital", tag: "BUILD · TEST · IMPROVE" },
+      { id: "9B", name: "MODERN CITY", desc: "Jaringan Komputer & Smart Infrastructure", tag: "OBSERVE · CONNECT · DECIDE" },
+      { id: "9C", name: "CYBER SPACE", desc: "Keamanan Informasi & Etika Digital", tag: "PROTECT · SHIELD · SECURE" },
+      { id: "9D", name: "ALGORITHM", desc: "Logika Pemrograman & Pemecahan Masalah", tag: "SOLVE · CODE · EXECUTE" },
+      { id: "9E", name: "DATA SCIENCE", desc: "Analisis Data & Olah Informasi", tag: "ANALYZE · VISUALIZE · DISCOVER" },
+      { id: "9F", name: "ARTIFICIAL INTEL", desc: "Kecerdasan Buatan & Masa Depan", tag: "TRAIN · PREDICT · INNOVATE" },
+      { id: "9G", name: "SOFTWARE DEV", desc: "Pengembangan Aplikasi & Interface", tag: "DESIGN · BUILD · DEPLOY" },
+      { id: "9H", name: "CLOUD TECH", desc: "Layanan Komputasi Awan & Web", tag: "SYNC · STORE · ACCESS" },
+      { id: "9I", name: "FUTURE LAB", desc: "Teknologi Terapan & Otomasi Lanjut", tag: "EXPLORE · CREATE · TRANSFORM" }
+    ];
+
+    /* APPLICATION STATE */
+    let activeClass = "9A";
+    let activeQuestions = [];
+    let currentQIndex = 0;
+    let selectedAbsen = null;
+    let scores = {}; // Store { "9A": { 1: 0, 2: 45, ... } }
+    let maxTimeForQ = 30;
+    let timeLeft = 30;
+    let timerInterval = null;
+    let hasAnswered = false;
+
+    // Initialize Scores structure for classes 9A-9I
+    worlds.forEach(w => {
+      scores[w.id] = {};
+      for (let i = 1; i <= 32; i++) scores[w.id][i] = 0;
+    });
+
+    /* AUDIO SYNTHESIZER SFX */
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    function playSFX(type) {
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+    function playSfx(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.connect(gain);
@@ -392,533 +487,448 @@
       const now = audioCtx.currentTime;
 
       if (type === 'click') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, now);
-        osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.frequency.setValueAtTime(400, now);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
         osc.start(now);
-        osc.stop(now + 0.08);
+        osc.stop(now + 0.05);
       } else if (type === 'correct') {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(523.25, now);
-        osc.frequency.setValueAtTime(659.25, now + 0.1);
-        osc.frequency.setValueAtTime(783.99, now + 0.2);
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+        osc.frequency.setValueAtTime(659.25, now + 0.08);
+        osc.frequency.setValueAtTime(783.99, now + 0.16);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
         osc.start(now);
-        osc.stop(now + 0.4);
+        osc.stop(now + 0.35);
       } else if (type === 'wrong') {
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.setValueAtTime(180, now + 0.15);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.setValueAtTime(130, now + 0.1);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
         osc.start(now);
-        osc.stop(now + 0.3);
-      } else if (type === 'milestone') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.setValueAtTime(554.37, now + 0.1);
-        osc.frequency.setValueAtTime(659.25, now + 0.2);
-        osc.frequency.setValueAtTime(880, now + 0.3);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
+        osc.stop(now + 0.25);
+      } else if (type === 'tick') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, now);
+        gain.gain.setValueAtTime(0.03, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
         osc.start(now);
-        osc.stop(now + 0.6);
+        osc.stop(now + 0.03);
+      } else if (type === 'timeup') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.linearRampToValueAtTime(100, now + 0.4);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
       }
     }
 
-    // Data 9 Kelas
-    const classData = [
-      { id: '9A', name: 'AI & Future Tech', icon: 'fa-robot', color: 'from-cyan-500 to-blue-600' },
-      { id: '9B', name: 'Smart City & IoT', icon: 'fa-city', color: 'from-amber-500 to-orange-600' },
-      { id: '9C', name: 'Cyber Shield', icon: 'fa-shield-halved', color: 'from-emerald-500 to-teal-600' },
-      { id: '9D', name: 'Big Data Galaxy', icon: 'fa-database', color: 'from-purple-500 to-indigo-600' },
-      { id: '9E', name: 'Metaverse & VR', icon: 'fa-vr-cardboard', color: 'from-fuchsia-500 to-pink-600' },
-      { id: '9F', name: 'Robotics Lab', icon: 'fa-gears', color: 'from-blue-500 to-cyan-600' },
-      { id: '9G', name: 'Space Tech', icon: 'fa-shuttle-space', color: 'from-sky-500 to-indigo-700' },
-      { id: '9H', name: 'Green Computing', icon: 'fa-leaf', color: 'from-green-500 to-emerald-700' },
-      { id: '9I', name: 'Digital Creative', icon: 'fa-palette', color: 'from-rose-500 to-red-600' }
-    ];
-
-    // Daftar Kata Mutiara Motivasi Kerja Keras & Jangan Takut Mencoba
-    const motivationalQuotes = [
-      "Satu-satunya kegagalan sejati adalah berhenti mencoba. Setiap kesalahan dalam kuis atau kode program adalah langkah menuju pemahaman yang lebih dalam!",
-      "Kerja keras melampaui bakat ketika bakat tidak bekerja keras. Tetap konsisten belajar Informatika!",
-      "Jangan takut salah. Komputer diciptakan oleh manusia yang belajar dari ribuan percobaan dan eror!",
-      "Keberhasilan tidak datang dari apa yang kamu lakukan sesekali, melainkan dari apa yang kamu lakukan secara konsisten.",
-      "Setiap ilmuwan komputer hebat bermula dari seorang pemula yang tidak pernah menyerah saat menemukan kesulitan."
-    ];
-
-    // Bank Soal 100 Pertanyaan Informatika Fase D (SMP Kelas 7-9) Kurikulum Merdeka
-    const baseQuestions = [
-      { q: "Landasan berpikir dalam informatika yang melibatkan penyelesaian masalah secara terstruktur dan logis disebut...", options: ["Berpikir Komputasional", "Kritik Sastra", "Analisis Verbal", "Desain Grafis"], answer: 0, fact: "Berpikir komputasional memiliki 4 pilar utama: Dekomposisi, Pengenalan Pola, Abstraksi, dan Algoritma." },
-      { q: "Proses memecah masalah besar dan kompleks menjadi bagian-bagian kecil yang lebih mudah dikelola disebut...", options: ["Dekomposisi", "Abstraksi", "Algoritma", "Pengenalan Pola"], answer: 0, fact: "Dekomposisi membantu menyelesaikan persoalan rumit dengan langkah kecil bertahap." },
-      { q: "Urutan langkah-langkah logis dan terstruktur untuk menyelesaikan suatu masalah disebut...", options: ["Algoritma", "Enkripsi", "Hardware", "Database"], answer: 0, fact: "Kata 'Algoritma' berasal dari nama ilmuwan Muslim Muhammad ibn Musa al-Khwarizmi." },
-      { q: "Menghilangkan bagian-bagian yang tidak relevan dan fokus pada informasi penting saja disebut...", options: ["Abstraksi", "Dekomposisi", "Sintesis", "Pengenalan Pola"], answer: 0, fact: "Abstraksi menyederhanakan masalah kompleks agar fokus pada inti persoalan." },
-      { q: "Mengenali kesamaan atau kecenderungan dari masalah yang pernah diselesaikan sebelumnya disebut...", options: ["Pengenalan Pola", "Algoritma", "Debugging", "Dekomposisi"], answer: 0, fact: "Pengenalan pola mempercepat penemuan solusi berdasarkan pengalaman masa lalu." },
-      { q: "Perangkat keras yang berfungsi sebagai pusat pemroses instruksi data (otak komputer) adalah...", options: ["CPU (Central Processing Unit)", "Harddisk Drive", "Power Supply", "Monitor"], answer: 0, fact: "CPU mengeksekusi jutaan hingga miliaran instruksi setiap detik." },
-      { q: "Memori utama komputer yang bersifat sementara (volatile) untuk menyimpan data program yang berjalan adalah...", options: ["RAM (Random Access Memory)", "ROM (Read Only Memory)", "Flashdisk", "CD-ROM"], answer: 0, fact: "Semakin besar RAM, semakin lancar komputer menjalankan banyak aplikasi sekaligus." },
-      { q: "Perangkat keras input yang digunakan untuk memasukkan perintah ketikan teks ke komputer adalah...", options: ["Keyboard", "Printer", "Speaker", "Monitor"], answer: 0, fact: "Tata letak keyboard QWERTY dirancang sejak era mesin tik mekanis." },
-      { q: "Alamat unik yang mengidentifikasi setiap perangkat yang terhubung ke jaringan internet disebut...", options: ["IP Address", "MAC Address", "Home Address", "Email ID"], answer: 0, fact: "IP Address bertindak seperti alamat rumah di dunia internet." },
-      { q: "Upaya penipuan digital untuk mencuri data sensitif seperti kata sandi lewat pesan atau link palsu disebut...", options: ["Phishing", "Streaming", "Browsing", "Coding"], answer: 0, fact: "Waspadai pesan mencurigakan yang meminta data rahasia atau PIN!" },
-      { q: "Etika dan norma kebiasaan yang baik dalam berkomunikasi di dunia maya (internet) disebut...", options: ["Netiket (Netiquette)", "Algoritma", "Prosedur Kerja", "Sistem Operasi"], answer: 0, fact: "Netiket mengajarkan kita saling menghormati dan bersikap sopan saat online." },
-      { q: "Dalam aplikasi pemroses angka (spreadsheet), rumus untuk menghitung jumlah total data adalah...", options: ["=SUM()", "=AVERAGE()", "=MAX()", "=COUNT()"], answer: 0, fact: "Rumus =SUM() memudahkan penjumlahan angka dalam jumlah banyak otomatis." },
-      { q: "Rumus spreadsheet yang digunakan untuk mencari nilai rata-rata dari sekelompok data adalah...", options: ["=AVERAGE()", "=SUM()", "=MIN()", "=IF()"], answer: 0, fact: "=AVERAGE() menghitung nilai tengah statistik dengan sangat cepat." },
-      { q: "Dalam Scratch, perintah perulangan yang menjalankan instruksi tanpa henti adalah...", options: ["Forever", "Repeat 10", "If then", "Wait 1 sec"], answer: 0, fact: "Blok 'Forever' berguna untuk membuat animasi atau pergerakan objek terus-menerus." },
-      { q: "Istilah dalam pemrograman untuk proses mencari dan memperbaiki kesalahan (bug) dalam kode adalah...", options: ["Debugging", "Compiling", "Rendering", "Downloading"], answer: 0, fact: "Istilah 'bug' terinspirasi dari serangga ngengat asli yang tersangkut di komputer masa lalu." },
-      { q: "Sistem bilangan berbasis 2 yang hanya terdiri dari angka 0 dan 1 disebut...", options: ["Biner", "Desimal", "Heksadesimal", "Oktal"], answer: 0, fact: "Komputer memproses semua data gambar, suara, dan teks dalam bentuk angka biner 0 dan 1." },
-      { q: "Perangkat keras yang berfungsi menyimpan data secara permanen pada komputer adalah...", options: ["Harddisk / SSD", "RAM", "Cache Memory", "VGA"], answer: 0, fact: "SSD bekerja jauh lebih cepat dibandingkan Harddisk mekanis konvensional." },
-      { q: "Sistem operasi komputer open-source yang sangat populer dan berlogo pinguin adalah...", options: ["Linux", "Windows", "macOS", "MS-DOS"], answer: 0, fact: "Linux dibuat oleh Linus Torvalds dan digunakan di sebagian besar server internet dunia." },
-      { q: "Perangkat jaringan yang berfungsi menghubungkan beberapa jaringan dan mengarahkan paket data adalah...", options: ["Router", "Kabel LAN", "Monitor", "Webcam"], answer: 0, fact: "Router mengarahkan data Wi-Fi di rumah menuju jaringan luar internet." },
-      { q: "Format file gambar yang mendukung latar belakang transparan adalah...", options: ["PNG", "JPEG", "BMP", "TXT"], answer: 0, fact: "PNG merupakan pilihan tepat untuk logo atau grafik berlatar transparan." },
-      
-      /* Additional bank questions generated sequentially up to 100 */
-      { q: "Komponen komputer yang mengubah arus listrik AC menjadi DC untuk memberi daya ke komponen adalah...", options: ["Power Supply Unit (PSU)", "Motherboard", "Heatsink", "RAM"], answer: 0, fact: "PSU yang stabil menjaga komponen komputer awet dari lonjakan listrik." },
-      { q: "Aplikasi browser yang dikembangkan oleh Google untuk menjelajahi halaman web adalah...", options: ["Google Chrome", "Microsoft Paint", "Notepad", "VLC Player"], answer: 0, fact: "Chrome adalah browser web paling banyak digunakan di dunia saat ini." },
-      { q: "Singkatan dari WWW dalam alamat situs internet adalah...", options: ["World Wide Web", "World Wide Wire", "Web Wide World", "Wide World Web"], answer: 0, fact: "WWW ditemukan oleh Tim Berners-Lee pada tahun 1989." },
-      { q: "Teknologi nirkabel jarak pendek yang biasa digunakan menghubungkan headphone atau mouse ke HP adalah...", options: ["Bluetooth", "Kabel Fiber Optik", "Satelit", "Kabel UTP"], answer: 0, fact: "Nama Bluetooth terinspirasi dari Raja Denmark abad ke-10, Harald Bluetooth." },
-      { q: "Perangkat keluaran (output) yang menampilkan hasil proses visual dari komputer adalah...", options: ["Monitor", "Keyboard", "Scanner", "Microphone"], answer: 0, fact: "Layar monitor modern menggunakan teknologi LED atau OLED hemat energi." },
-      { q: "Perangkat input yang digunakan untuk memindai dokumen fisik menjadi file digital adalah...", options: ["Scanner", "Printer", "Plotter", "Speaker"], answer: 0, fact: "Scanner mengubah foto kertas menjadi berkas digital secara instan." },
-      { q: "Program jahat yang dapat merusak sistem komputer dan menggandakan dirinya disebut...", options: ["Virus Komputer", "Antivirus", "Firewall", "Driver"], answer: 0, fact: "Selalu perbarui antivirus agar komputer terhindar dari ancaman siber." },
-      { q: "Tindakan merundung atau mengintimidasi seseorang melalui media sosial atau internet disebut...", options: ["Cyberbullying", "Cybercrime", "Phishing", "Hacking"], answer: 0, fact: "Bersikap empati dan sopan sangat penting di ruang digital." },
-      { q: "Dalam rumus spreadsheet, simbol yang WAJIB dituliskan sebelum memulai rumus adalah...", options: ["Sama dengan (=)", "Tambah (+)", "Bintang (*)", "Pagar (#)"], answer: 0, fact: "Tanda '=' memberitahu spreadsheet bahwa kita memasukkan rumus perhitungan." },
-      { q: "Rumus spreadsheet untuk mencari nilai tertinggi dalam suatu rentang data adalah...", options: ["=MAX()", "=MIN()", "=AVERAGE()", "=SUM()"], answer: 0, fact: "=MAX() berguna untuk mengetahui nilai teratas dengan cepat." },
-      { q: "Rumus spreadsheet untuk mencari nilai terendah dalam sekelompok data adalah...", options: ["=MIN()", "=MAX()", "=COUNT()", "=SUM()"], answer: 0, fact: "=MIN() mempermudah pencarian angka terkecil secara otomatis." },
-      { q: "Aplikasi bawaan Windows yang digunakan untuk mengolah teks sederhana tanpa format adalah...", options: ["Notepad", "Microsoft Excel", "Adobe Photoshop", "CorelDraw"], answer: 0, fact: "Notepad sering digunakan pemrogram untuk menulis baris kode pemrograman dasar." },
-      { q: "Jenis ekstensi file untuk dokumen aplikasi pemroses kata Microsoft Word adalah...", options: [".docx", ".xlsx", ".pptx", ".mp3"], answer: 0, fact: "Ekstensi file memberitahu sistem operasi aplikasi mana yang bisa membukanya." },
-      { q: "Jenis ekstensi file untuk lembar kerja Microsoft Excel adalah...", options: [".xlsx", ".docx", ".pdf", ".jpg"], answer: 0, fact: ".xlsx menyimpan tabel data, grafik, dan rumus matematika." },
-      { q: "Jenis ekstensi file dokumen yang tidak mudah diubah layoutnya dan bersifat portable adalah...", options: [".pdf", ".txt", ".exe", ".zip"], answer: 0, fact: "PDF (Portable Document Format) memastikan tampilan dokumen tetap sama di perangkat apa pun." },
-      { q: "Layanan penyimpanan berkas berbasis awan (cloud storage) dari Google adalah...", options: ["Google Drive", "Google Maps", "Google Meet", "Google Translate"], answer: 0, fact: "Cloud storage memungkinkan kita mengakses berkas dari mana saja via internet." },
-      { q: "Dalam Scratch, sprite adalah sebutan untuk...", options: ["Karakter / Objek Visual", "Latar Belakang", "Suara Musik", "Kode Variabel"], answer: 0, fact: "Sprite dapat digerakkan dan diberi perintah pemrograman visual." },
-      { q: "Area tempat sprite bergerak dan berinteraksi di aplikasi Scratch disebut...", options: ["Stage", "Palette", "Costume", "Backpack"], answer: 0, fact: "Stage dalam Scratch memiliki koordinat X dan Y untuk menentukan posisi objek." },
-      { q: "Perintah percabangan logika dalam Scratch ditunjukkan oleh blok...", options: ["If ... Then", "Move 10 steps", "Play sound", "Change color"], answer: 0, fact: "Percabangan memungkinkan program membuat keputusan berdasarkan kondisi tertentu." },
-      { q: "Nilai kebenaran dalam logika matematika/komputasi hanya terdiri dari...", options: ["True & False (Benar & Salah)", "1 & 10", "Plus & Minus", "High & Low"], answer: 0, fact: "Tipe data Boolean dinamai berdasarkan matematikawan George Boole." },
-      
-      { q: "Port umum pada komputer yang digunakan untuk menghubungkan flashdisk dan peralatan modern adalah...", options: ["USB (Universal Serial Bus)", "VGA", "LPT Parallel", "PS/2"], answer: 0, fact: "USB dikembangkan secara serentak oleh beberapa perusahaan teknologi ternama." },
-      { q: "Kabel jaringan yang sering digunakan untuk menghubungkan komputer ke modem/router adalah...", options: ["Kabel UTP (Ethernet)", "Kabel HDMI", "Kabel Audio RCA", "Kabel Power"], answer: 0, fact: "Kabel UTP menggunakan konektor RJ-45 di ujungnya." },
-      { q: "Teknologi pencetak yang menggunakan pita tinta dan jarum pengetuk adalah...", options: ["Dot Matrix", "Printer Inkjet", "Printer Laser", "Printer 3D"], answer: 0, fact: "Printer Dot Matrix masih banyak dipakai untuk mencetak nota rangkap." },
-      { q: "Perangkat keras yang memproses grafik video untuk ditampilkan ke layar monitor adalah...", options: ["GPU / VGA Card", "Sound Card", "Network Card", "Power Supply"], answer: 0, fact: "GPU sangat penting untuk aplikasi 3D, game, dan pengolahan video." },
-      { q: "Tindakan menyalin data penting ke tempat penyimpanan lain untuk mengantisipasi kerusakan disebut...", options: ["Backup", "Restore", "Delete", "Format"], answer: 0, fact: "Rutin melakukan backup mencegah kehilangan data penting akibat bencana atau virus." },
-      { q: "Pencegah akses tak berizin masuk atau keluar dari jaringan komputer internal disebut...", options: ["Firewall", "Spyware", "Ransomware", "Keylogger"], answer: 0, fact: "Firewall memfilter lalu lintas jaringan berdasarkan aturan keamanan." },
-      { q: "Jenis malware yang mengunci data korban dan meminta uang tebusan adalah...", options: ["Ransomware", "Adware", "Trojan", "Worm"], answer: 0, fact: "Gunakan backup dan jangan membuka tautan asing agar terhindar dari Ransomware." },
-      { q: "Singkatan dari URL yang merupakan alamat lengkap suatu halaman di internet adalah...", options: ["Uniform Resource Locator", "Universal Register Link", "United Resource Line", "Uniform Routing Label"], answer: 0, fact: "URL membantu browser mengarahkan kita ke halaman situs yang tepat." },
-      { q: "Proses mengompres berkas menjadi lebih kecil (misal .zip) bertujuan untuk...", options: ["Menghemat ruang penyimpanan & mempercepat kirim data", "Mengubah nama berkas", "Menghapus virus secara otomatis", "Meningkatkan kualitas foto"], answer: 0, fact: "File .zip memadatkan data tanpa mengurangi isi dokumen di dalamnya." },
-      { q: "Simbol operasi matematika perkalian dalam rumus spreadsheet adalah...", options: ["Tanda Bintang (*)", "Tanda Silang (x)", "Tanda Titik (.)", "Tanda Pagar (#)"], answer: 0, fact: "Komputer menggunakan '*' untuk perkalian dan '/' untuk pembagian." },
-      { q: "Simbol operasi matematika pembagian dalam rumus spreadsheet adalah...", options: ["Garis Miring (/)", "Tanda Titik Dua (:)", "Tanda Persen (%)", "Tanda Kurang (-)"], answer: 0, fact: "Garis miring '/' membagi nilai di sebelah kiri dengan nilai di kanan." },
-      { q: "Kumpulan sel horisontal (mendatar) dari kiri ke kanan pada spreadsheet yang ditandai dengan angka disebut...", options: ["Baris (Row)", "Kolom (Column)", "Cell", "Range"], answer: 0, fact: "Baris ditandai angka (1, 2, 3), sedangkan kolom ditandai huruf (A, B, C)." },
-      { q: "Kumpulan sel vertikal dari atas ke bawah pada spreadsheet yang ditandai dengan huruf disebut...", options: ["Kolom (Column)", "Baris (Row)", "Cell", "Sheet"], answer: 0, fact: "Pertemuan antara Kolom dan Baris membentuk sebuah Sel (Cell)." },
-      { q: "Pertemuan antara kolom A dan baris 5 pada spreadsheet dinamakan sel...", options: ["A5", "5A", "A-5", "CELL-5"], answer: 0, fact: "Penulisan alamat sel selalu mendahulukan huruf kolom lalu angka baris." },
-      { q: "Kombinasi tombol keyboard untuk menyalin (Copy) teks atau objek adalah...", options: ["Ctrl + C", "Ctrl + V", "Ctrl + X", "Ctrl + Z"], answer: 0, fact: "Shortcut keyboard menghemat waktu kerja saat menggunakan komputer." },
-      { q: "Kombinasi tombol keyboard untuk menempelkan (Paste) hasil salinan adalah...", options: ["Ctrl + V", "Ctrl + C", "Ctrl + P", "Ctrl + A"], answer: 0, fact: "Fungsi Paste menempatkan objek yang ada di clipboard." },
-      { q: "Kombinasi tombol keyboard untuk memotong (Cut) objek adalah...", options: ["Ctrl + X", "Ctrl + C", "Ctrl + S", "Ctrl + N"], answer: 0, fact: "Cut memindahkan objek asli ke lokasi baru." },
-      { q: "Kombinasi tombol keyboard untuk membatalkan perintah terakhir (Undo) adalah...", options: ["Ctrl + Z", "Ctrl + Y", "Ctrl + A", "Ctrl + F"], answer: 0, fact: "Ctrl+Z sangat berguna jika kita salah menekan atau menghapus objek." },
-      { q: "Kombinasi tombol keyboard untuk memilih seluruh teks atau objek (Select All) adalah...", options: ["Ctrl + A", "Ctrl + S", "Ctrl + F", "Ctrl + Shift"], answer: 0, fact: "Ctrl+A menandai seluruh isi dokumen secara cepat." },
-      { q: "Kombinasi tombol keyboard untuk menyimpan berkas (Save) adalah...", options: ["Ctrl + S", "Ctrl + P", "Ctrl + O", "Ctrl + N"], answer: 0, fact: "Biasakan menekan Ctrl+S secara berkala agar hasil kerja tidak hilang." },
-      
-      { q: "Kombinasi tombol keyboard untuk mencetak dokumen (Print) adalah...", options: ["Ctrl + P", "Ctrl + M", "Ctrl + D", "Ctrl + H"], answer: 0, fact: "Ctrl+P langsung membuka jendela pengaturan cetak dokumen." },
-      { q: "Jaringan komputer yang mencakup area geografi lokal yang sempit seperti dalam satu ruang kelas disebut...", options: ["LAN (Local Area Network)", "WAN (Wide Area Network)", "MAN (Metropolitan Area Network)", "VPN"], answer: 0, fact: "LAN menghubungkan perangkat di sekolah atau rumah dengan kecepatan tinggi." },
-      { q: "Jaringan komputer global skala dunia yang menghubungkan jutaan komputer disebut...", options: ["Internet", "Intranet", "Bluetooth Network", "Hotspot"], answer: 0, fact: "Internet berasal dari kata Interconnected Network." },
-      { q: "Layanan panggilan video atau rapat tatap muka online yang populer adalah...", options: ["Google Meet / Zoom", "Microsoft Paint", "WinRAR", "Calculators"], answer: 0, fact: "Panggilan video memanfaatkan transmisi data suara dan gambar real-time." },
-      { q: "Salah satu dampak negatif dari terlalu lama menggunakan perangkat digital tanpa istirahat adalah...", options: ["Mata lelah & kelelahan fisik", "Komputer menjadi lebih cepat", "Kapasitas RAM bertambah", "Baterai bertambah penuh"], answer: 0, fact: "Terapkan aturan 20-20-20 untuk menjaga kesehatan mata saat menatap layar." },
-      { q: "Sikap bijak ketika menemukan informasi berisikan berita bohong (hoaks) di media sosial adalah...", options: ["Saring sebelum bagikan & cek fakta", "Langsung membagikan ke semua grup", "Mengirim pesan marah ke semua orang", "Mengubah isi berita"], answer: 0, fact: "Selalu konfirmasi kebenaran berita dari sumber resmi terpercaya." },
-      { q: "Informasi rahasia yang tidak boleh dibagikan kepada orang lain demi keamanan akun adalah...", options: ["Kata Sandi (Password) & Kode OTP", "Nama Lengkap", "Kelas Sekolah", "Hobi Pembelajaran"], answer: 0, fact: "Jangan pernah memberikan kode OTP atau password kepada siapa pun!" },
-      { q: "Istilah untuk mengubah teks asli menjadi pesan acak terenkripsi agar tidak bisa dibaca pihak tak berhak adalah...", options: ["Enkripsi", "Dekripsi", "Instalasi", "Pengarsipan"], answer: 0, fact: "Enkripsi digunakan aplikasi perpesanan seperti WhatsApp untuk menjaga kerahasiaan." },
-      { q: "Komponen dasar algoritma yang memilih langkah berdasarkan syarat tertentu disebut...", options: ["Percabangan (Conditional)", "Perulangan (Loop)", "Variabel", "Prosedur"], answer: 0, fact: "Percabangan memisahkan jalan keputusan, seperti contoh: 'Jika Hujan, Bawa Payung'." },
-      { q: "Tempat dalam ingatan program yang digunakan untuk menyimpan nilai data yang dapat berubah-ubah disebut...", options: ["Variabel", "Konstanta", "Operator", "Fungsi"], answer: 0, fact: "Variabel ibarat kotak berlabel tempat menyimpan nilai angka atau teks." },
-      
-      { q: "Simbol berbentuk belah ketupat pada diagram alir (flowchart) menunjukkan fungsi...", options: ["Keputusan / Percabangan (Decision)", "Mulai / Selesai (Terminator)", "Proses Perhitungan", "Input / Output Data"], answer: 0, fact: "Belah ketupat memiliki dua cabang keluaran, yaitu 'Ya' atau 'Tidak'." },
-      { q: "Simbol berbentuk oval / kapsul pada diagram alir (flowchart) menunjukkan...", options: ["Mulai / Selesai (Terminator)", "Proses", "Input Data", "Garis Alir"], answer: 0, fact: "Terminator menandai titik awal dan titik akhir suatu skema algoritma." },
-      { q: "Simbol berbentuk jajaran genjang pada diagram alir (flowchart) menunjukkan...", options: ["Input atau Output Data", "Proses Perhitungan", "Keputusan", "Penghubung"], answer: 0, fact: "Jajaran genjang digunakan saat membaca input user atau menampilkan hasil." },
-      { q: "Simbol berbentuk persegi panjang pada diagram alir (flowchart) menunjukkan...", options: ["Proses Perhitungan / Eksekusi", "Mulai", "Keputusan", "Input Data"], answer: 0, fact: "Persegi panjang merepresentasikan langkah pengolahan data matematika atau assignment." },
-      { q: "Istilah kecerdasan buatan dalam dunia teknologi yang mampu meniru cara berpikir manusia adalah...", options: ["Artificial Intelligence (AI)", "Augmented Input (AI)", "Automated Internet (AI)", "Active Information (AI)"], answer: 0, fact: "AI melatih sistem untuk belajar dari data dan mengambil keputusan mandiri." },
-      { q: "Teknologi yang menggabungkan dunia nyata dengan elemen objek digital secara bersamaan disebut...", options: ["Augmented Reality (AR)", "Virtual Reality (VR)", "Artificial Network", "Cloud Storage"], answer: 0, fact: "AR contohnya terdapat pada game Pokemon GO dan filter wajah di medsos." },
-      { q: "Teknologi yang menciptakan lingkungan dunia buatan 3D sepenuhnya lewat kacamata khusus disebut...", options: ["Virtual Reality (VR)", "Augmented Reality (AR)", "GPS System", "Bluetooth"], answer: 0, fact: "VR membuat pengguna merasa benar-benar berada di dalam dunia virtual." },
-      { q: "Jaringan perangkat fisik yang saling terhubung dan saling bertukar data lewat internet disebut...", options: ["IoT (Internet of Things)", "Big Data", "Social Media", "Search Engine"], answer: 0, fact: "Contoh IoT adalah lampu rumah pintar yang bisa dimatikan lewat smartphone." },
-      { q: "Istilah untuk kumpulan data berukuran sangat besar, cepat, dan beragam yang diolah secara khusus adalah...", options: ["Big Data", "Micro Data", "Small File", "Single Record"], answer: 0, fact: "Big Data dianalisis untuk menemukan tren perilaku atau prediksi masa depan." },
-      { q: "Aktivitas menulis instruksi kode program menggunakan bahasa pemrograman dinamakan...", options: ["Coding / Programming", "Networking", "Browsing", "Editing"], answer: 0, fact: "Coding melatih kemampuan berpikir logis, kreatif, dan sistematis." },
-      
-      { q: "Bahasa pemrograman visual berbasis blok yang sangat ramah bagi pemula buatan MIT adalah...", options: ["Scratch", "C++", "Java", "Assembly"], answer: 0, fact: "Scratch memungkinkan belajar logika coding tanpa takut salah ketik sintaks." },
-      { q: "Bahasa pemrograman populer berbuka kelas dunia yang menggunakan simbol ular pyton sebagai ikonnya adalah...", options: ["Python", "PHP", "HTML", "Ruby"], answer: 0, fact: "Python banyak digunakan dalam riset AI, sains data, dan pengembangan web." },
-      { q: "Bahasa standar yang digunakan untuk membuat struktur halaman web di internet adalah...", options: ["HTML", "SQL", "C#", "Pascal"], answer: 0, fact: "HTML merupakan kepanjangan dari HyperText Markup Language." },
-      { q: "Bahasa yang digunakan untuk mengatur tampilan visual dan gaya gaya estetika halaman web adalah...", options: ["CSS", "C++", "Python", "Java"], answer: 0, fact: "CSS (Cascading Style Sheets) memberi warna, tata letak, dan keindahan web." },
-      { q: "Layanan pencarian berita, gambar, dan informasi utama di internet dikembangkan oleh...", options: ["Google Search", "Microsoft Paint", "Adobe Reader", "Winamp"], answer: 0, fact: "Mesin pencari menggunakan algoritma khusus memilah miliaran web dalam milidetik." },
-      { q: "Bagian komputer yang menghubungkan seluruh komponen utama seperti CPU, RAM, dan kartu grafis adalah...", options: ["Motherboard", "Casing", "Power Cord", "Harddisk"], answer: 0, fact: "Motherboard berisi jalur-jalur konduktor listrik yang menghubungkan antar komponen." },
-      { q: "Media transmisi internet super cepat yang memanfaatkan berkas sinar cahaya di dalam kaca halus adalah...", options: ["Kabel Fiber Optik", "Kabel Tembaga", "Gelombang Radio AM", "Kabel Telefon"], answer: 0, fact: "Fiber optik mentransfer data hampir mendekati kecepatan cahaya." },
-      { q: "Alat penunjuk visual berupa kursor pada sistem antarmuka grafis (GUI) dikendalikan oleh...", options: ["Mouse / Touchpad", "Speaker", "Printer", "Microphone"], answer: 0, fact: "Mouse pertama di dunia terbuat dari bahan kotak kayu sederhana." },
-      { q: "Istilah antarmuka berbasis grafis yang memudahkan pengguna mengoperasikan komputer lewat ikon adalah...", options: ["GUI (Graphical User Interface)", "CLI (Command Line Interface)", "API", "IP"], answer: 0, fact: "GUI membuat komputer mudah digunakan siapa saja tanpa perlu hafal kode." },
-      { q: "Sistem antarmuka komputer yang menggunakan ketikan perintah teks tanpa gambar dinamakan...", options: ["CLI (Command Line Interface)", "GUI", "Touchscreen", "VR"], answer: 0, fact: "CLI sering digunakan oleh administrator jaringan dan hacker profesional." },
-
-      { q: "Langkah pertama dalam 4 pilar Berpikir Komputasional adalah...", options: ["Dekomposisi", "Sintesis", "Pengujian", "Publikasi"], answer: 0, fact: "Memecah masalah menjadi kecil membuat solusi lebih mudah terbayang." },
-      { q: "Perangkat lunak yang bertugas mengelola sumber daya hardware dan melayani aplikasi pengguna adalah...", options: ["Sistem Operasi (OS)", "Aplikasi Game", "Antivirus", "Browser"], answer: 0, fact: "Windows, Linux, macOS, dan Android adalah contoh Sistem Operasi." },
-      { q: "Istilah untuk kecepatan pengiriman data melalui jaringan internet diukur dalam satuan...", options: ["Mbps (Megabit per second)", "RPM", "GHz", "Watt"], answer: 0, fact: "Semakin tinggi Mbps, semakin cepat proses unduh dan streaming." },
-      { q: "Fasilitas internet yang memungkinkan pengiriman surat elektronik secara digital dinamakan...", options: ["Email (Electronic Mail)", "E-Commerce", "E-Banking", "E-Learning"], answer: 0, fact: "Email pertama dikirimkan oleh Ray Tomlinson pada tahun 1971." },
-      { q: "Tanda centang atau ikon gembok pada bilah alamat web (HTTPS) menandakan situs tersebut...", options: ["Menggunakan koneksi aman terenkripsi", "Merupakan situs palsu", "Gratis tanpa bayar", "Tidak memiliki server"], answer: 0, fact: "HTTPS melindungi data pribadi dari penyadapan di jaringan terbuka." },
-      { q: "Fitur pada spreadsheet yang berguna untuk mengurutkan data dari A ke Z atau dari kecil ke besar dinamakan...", options: ["Sort", "Filter", "Chart", "Merge"], answer: 0, fact: "Fungsi Sort merapikan data acak hanya dengan satu kali klik." },
-      { q: "Fitur pada spreadsheet yang berguna untuk menyaring dan menampilkan data sesuai kriteria tertentu adalah...", options: ["Filter", "Sort", "Page Break", "Wrap Text"], answer: 0, fact: "Filter memudahkan mencari data spesifik di antara ribuan baris." },
-      { q: "Fitur spreadsheet untuk menggabungkan dua atau lebih sel menjadi satu sel besar adalah...", options: ["Merge & Center", "Split Cells", "Border", "Format Painter"], answer: 0, fact: "Merge & Center sering digunakan saat membuat judul tabel." },
-      { q: "Penggunaan media sosial secara bijak melibatkan pertimbangan sebelum mengunggah postingan, yaitu...", options: ["Apakah bermanfaat, benar, dan tidak menyakiti orang lain?", "Apakah akan disukai ribuan orang tanpa perduli dampak?", "Apakah berisi informasi rahasia teman?", "Apakah membuat orang bingung?"], answer: 0, fact: "Pikirkan dampak postingan bagi masa depanmu dan orang lain." },
-      { q: "Jejak aktivitas digital yang kita tinggalkan saat menggunakan internet dinamakan...", options: ["Jejak Digital (Digital Footprint)", "Riwayat Listrik", "Cache Memori", "Sertifikat Web"], answer: 0, fact: "Jejak digital bersifat permanen dan sulit dihapus sepenuhnya." },
-
-      { q: "Perangkat keras pendung suara yang menghasilkan keluaran audio dari komputer adalah...", options: ["Speaker / Headphone", "Microphone", "Webcam", "Joystick"], answer: 0, fact: "Speaker mengonversi sinyal elektrik digital menjadi gelombang suara." },
-      { q: "Perangkat keras penangkap suara pengguna untuk dimasukkan ke komputer dinamakan...", options: ["Microphone", "Speaker", "Projector", "Plotter"], answer: 0, fact: "Microphone digunakan saat rapat daring dan rekaman suara." },
-      { q: "Sistem bilangan berbasis 10 yang kita gunakan dalam kehidupan sehari-hari dinamakan...", options: ["Desimal", "Biner", "Heksadesimal", "Oktal"], answer: 0, fact: "Sistem desimal menggunakan angka 0 sampai 9." },
-      { q: "Sistem bilangan berbasis 16 yang terdiri dari angka 0-9 dan huruf A-F dinamakan...", options: ["Heksadesimal", "Biner", "Desimal", "Oktal"], answer: 0, fact: "Heksadesimal sering digunakan untuk merepresentasikan kode warna web." },
-      { q: "Kode warna web '#FFFFFF' merepresentasikan warna...", options: ["Putih", "Hitam", "Merah", "Biru"], answer: 0, fact: "#FFFFFF berarti kombinasi maksimum warna Red, Green, dan Blue." },
-      { q: "Kode warna web '#000000' merepresentasikan warna...", options: ["Hitam", "Putih", "Hijau", "Kuning"], answer: 0, fact: "#000000 berarti tidak ada pancaran cahaya warna Red, Green, maupun Blue." },
-      { q: "Istilah untuk menghubungkan smartphone ke laptop agar laptop bisa memakai kuota internet smartphone adalah...", options: ["Tethering / Mobile Hotspot", "Bluetooth Pairing", "Airplane Mode", "Screen Mirroring"], answer: 0, fact: "Tethering membagikan akses jaringan seluler ke perangkat lain." },
-      { q: "Aplikasi yang bertugas melindungi komputer dari serangan program jahat dinamakan...", options: ["Antivirus", "Malware", "Adware", "Ransomware"], answer: 0, fact: "Antivirus memindai dan membersihkan file terinfeksi." },
-      { q: "Istilah untuk lisensi perangkat lunak gratis yang kode sumbernya terbuka untuk dikembangkan siapa saja adalah...", options: ["Open Source", "Freeware", "Shareware", "Proprietary"], answer: 0, fact: "Software open-source mendorong kolaborasi pengembang seluruh dunia." },
-      { q: "Penyebab paling umum komputer berjalan sangat lambat saat membuka banyak aplikasi sekaligus adalah...", options: ["Kapasitas RAM penuh", "Monitor terlalu terang", "Keyboard kotor", "Kabel LAN terlepas"], answer: 0, fact: "Saat RAM penuh, sistem terpaksa memakai memori cadangan di harddisk yang lebih lambat." },
-
-      { q: "Lisensi perangkat lunak yang boleh digunakan gratis tetapi dalam jangka waktu percobaan terbatas dinamakan...", options: ["Shareware / Trial", "Open Source", "Commercial", "Public Domain"], answer: 0, fact: "Shareware memberikan uji coba gratis sebelum pengguna memutuskan membeli." },
-      { q: "Alat pendeteksi lokasi berbasis satelit yang tertanam di smartphone dinamakan...", options: ["GPS (Global Positioning System)", "NFC", "Wi-Fi", "Infrared"], answer: 0, fact: "GPS memanfaatkan puluhan satelit mengorbit bumi untuk menentukan posisi tepat." },
-      { q: "Teknologi nirkabel yang memungkinkan pembayaran digital hanya dengan menempelkan smartphone dinamakan...", options: ["NFC (Near Field Communication)", "Bluetooth", "Hotspot", "Radio FM"], answer: 0, fact: "NFC bekerja cepat dalam jarak sangat dekat kurang dari 10 cm." },
-      { q: "Istilah untuk memperbarui perangkat lunak ke versi lebih baru yang perbaiki bug dinamakan...", options: ["Update / Upgrade", "Downgrade", "Uninstall", "Format"], answer: 0, fact: "Pembaruan software menjaga keamanan dan stabilitas perangkat." },
-      { q: "Proses menghapus seluruh data pada media penyimpanan dan menyiapkan sistem berkas baru dinamakan...", options: ["Format", "Clean Up", "Scan", "Compress"], answer: 0, fact: "Format akan mengosongkan seluruh isi drive penyimpanan." },
-      { q: "Aktivitas membobol sistem keamanan komputer tanpa izin dengan niat merusak dinamakan...", options: ["Cracking / Hacking Jahat", "Networking", "System Analyst", "Web Developer"], answer: 0, fact: "Peretas etis (Ethical Hacker) justru membantu perusahaan menemukan celah keamanan." },
-      { q: "Profesi yang bertugas merancang dan membuat kode aplikasi atau perangkat lunak dinamakan...", options: ["Software Developer / Programmer", "Data Entry", "System Administrator", "Content Creator"], answer: 0, fact: "Programmer mengubah ide logis menjadi aplikasi berfaedah." },
-      { q: "Profesi yang bertugas menganalisis data untuk membantu pengambilan keputusan bisnis dinamakan...", options: ["Data Analyst", "Hardware Engineer", "Graphic Designer", "Copywriter"], answer: 0, fact: "Data Analyst mengubah tumpukan angka acak menjadi informasi berharga." },
-      { q: "Pentingnya menjaga kerahasiaan kata sandi (password) bertujuan untuk...", options: ["Mencegah orang lain mengambil alih akun pribadi", "Supaya kuis selesai cepat", "Meningkatkan kecepatan internet", "Membuat memori RAM bertambah"], answer: 0, fact: "Gunakan kombinasi huruf besar, angka, dan simbol pada kata sandi." },
-      { q: "Sikap terbaik dalam menghadapi perkembangan ilmu Informatika dan Teknologi yang cepat adalah...", options: ["Semangat belajar hal baru, pantang menyerah, dan berani mencoba!", "Takut dan menghindari teknologi", "Merasa sudah tahu segalanya tanpa latihan", "Pasrah dan tidak mau bertanya"], answer: 0, fact: "Dunia Informatika berkembang pesat; sikap terus belajar adalah kunci sukses!" }
-    ];
-
-    // Global App State
-    let selectedClass = null;
-    let selectedAbsen = null;
-    let currentQIndex = 0;
-    let hasAnswered = false;
-    let activeQuestions = [];
-    
-    // Student Statistics Tracker (1 - 32)
-    let studentStats = {};
-
-    function initStudentStats() {
-      studentStats = {};
-      for (let i = 1; i <= 32; i++) {
-        studentStats[i] = {
-          correct: 0,
-          total: 0,
-          score: 0,
-          lastMilestoneSeen: 0
-        };
-      }
-    }
-
-    // Shuffle Function
-    function shuffleArray(array) {
-      const arr = [...array];
-      for (let i = arr.length - 1; i > 0; i--) {
+    /* SHUFFLE ARRAY HELPER */
+    function shuffleArray(arr) {
+      const shuffled = [...arr];
+      for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
-      return arr;
+      return shuffled;
     }
 
-    // Toast Notification
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toast-message').innerText = msg;
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 2500);
-    }
+    /* NAVIGATION FUNCTIONS */
+    function showScreen(screenId) {
+      document.getElementById('screen-home').classList.add('hidden');
+      document.getElementById('screen-worlds').classList.add('hidden');
+      document.getElementById('screen-quiz').classList.add('hidden');
+      document.getElementById('screen-teacher').classList.add('hidden');
 
-    // Toggle Fullscreen
-    function toggleFullscreen() {
-      playSFX('click');
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {
-          showToast("Mode layar penuh disesuaikan untuk perangkat Anda.");
-        });
+      document.getElementById(screenId).classList.remove('hidden');
+
+      const backBtn = document.getElementById('nav-back-btn');
+      const classBadge = document.getElementById('class-badge');
+
+      if (screenId === 'screen-quiz') {
+        backBtn.classList.remove('hidden');
+        classBadge.classList.remove('hidden');
+      } else if (screenId === 'screen-worlds') {
+        backBtn.classList.add('hidden');
+        classBadge.classList.add('hidden');
       } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        }
+        backBtn.classList.add('hidden');
+        classBadge.classList.add('hidden');
       }
     }
 
-    function renderClasses() {
-      const grid = document.getElementById('class-grid');
-      grid.innerHTML = classData.map(c => `
-        <button onclick="playSFX('click'); selectClass('${c.id}')" class="glass-panel p-5 rounded-2xl flex items-center space-x-4 border border-slate-800 hover:border-cyan-400 hover:scale-105 transition active:scale-95 text-left group cursor-pointer">
-          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${c.color} flex items-center justify-center text-2xl font-black text-white shadow-lg">
-            <i class="fa-solid ${c.icon}"></i>
-          </div>
-          <div>
-            <h3 class="text-2xl font-black text-white group-hover:text-cyan-400 transition">${c.id}</h3>
-            <p class="text-slate-400 text-xs md:text-sm font-semibold">${c.name}</p>
-          </div>
-        </button>
-      `).join('');
+    function goToHome() {
+      playSfx('click');
+      stopTimer();
+      showScreen('screen-home');
     }
 
-    function goToClassSelect() {
-      document.getElementById('screen-landing').classList.add('hidden');
-      document.getElementById('screen-summary').classList.add('hidden');
-      document.getElementById('screen-class').classList.remove('hidden');
-      renderClasses();
+    function goToWorlds() {
+      playSfx('click');
+      renderWorldsGrid();
+      showScreen('screen-worlds');
     }
 
-    function selectClass(classId) {
-      selectedClass = classData.find(c => c.id === classId);
-      document.getElementById('roster-class-title').innerText = `Kelas ${selectedClass.id}`;
-      document.getElementById('roster-theme-title').innerText = selectedClass.name;
+    function selectWorld(classId) {
+      playSfx('click');
+      activeClass = classId;
+      document.getElementById('current-class-label').innerText = classId;
 
-      document.getElementById('screen-class').classList.add('hidden');
-      document.getElementById('screen-roster').classList.remove('hidden');
-    }
-
-    function startMindfulPause() {
-      document.getElementById('screen-roster').classList.add('hidden');
-      const modal = document.getElementById('modal-mindful');
-      modal.classList.remove('hidden');
-
-      let count = 3;
-      const timerEl = document.getElementById('mindful-timer');
-      timerEl.innerText = count;
-
-      const interval = setInterval(() => {
-        count--;
-        if (count > 0) {
-          timerEl.innerText = count;
-        } else {
-          clearInterval(interval);
-          modal.classList.add('hidden');
-          startQuizEngine();
-        }
-      }, 1000);
-    }
-
-    function startQuizEngine() {
-      initStudentStats();
-      document.getElementById('screen-quiz').classList.remove('hidden');
-      document.getElementById('quiz-class-name').innerText = `${selectedClass.id} - ${selectedClass.name}`;
-      
-      // Acak 100 soal untuk kuis
-      activeQuestions = shuffleArray(baseQuestions);
-
+      // Menggunakan seluruh 100 soal (diacak urutannya)
+      activeQuestions = shuffleArray(rawQuestions);
       currentQIndex = 0;
-      selectedAbsen = null;
 
-      renderAbsenGrid();
+      showScreen('screen-quiz');
       loadQuestion();
     }
 
-    // Render Panel Absen (1-32) dengan Indikator Poin Realtime
-    function renderAbsenGrid() {
-      const grid = document.getElementById('absen-grid');
-      let html = '';
-      for (let i = 1; i <= 32; i++) {
-        const stats = studentStats[i];
-        const isSelected = selectedAbsen === i;
-        const numStr = i < 10 ? '0' + i : i;
-        
-        let bgClass = 'bg-slate-900 border-slate-800 text-slate-300';
-        if (isSelected) {
-          bgClass = 'bg-cyan-400 text-slate-950 border-cyan-300 font-black';
-        } else if (stats.score > 0) {
-          bgClass = 'bg-slate-800 border-emerald-500/50 text-emerald-300';
-        }
-
-        html += `
-          <button onclick="playSFX('click'); pickAbsen(${i})" id="absen-btn-${i}" class="absen-btn relative h-12 p-1 rounded-xl text-xs font-bold border transition active:scale-90 flex flex-col items-center justify-center cursor-pointer ${bgClass}">
-            <span class="text-sm font-black">${numStr}</span>
-            ${stats.score > 0 ? `<span class="text-[10px] font-extrabold text-amber-400 flex items-center gap-0.5"><i class="fa-solid fa-star text-[8px]"></i>${stats.score}pt</span>` : ''}
-          </button>
-        `;
-      }
-      grid.innerHTML = html;
-      
-      if (selectedAbsen) {
-        const numStr = selectedAbsen < 10 ? '0' + selectedAbsen : selectedAbsen;
-        const stats = studentStats[selectedAbsen];
-        document.getElementById('current-selected-absen-text').innerText = `Absen ${numStr} (${stats.score} Poin)`;
-        document.getElementById('stat-correct-count').innerText = `${stats.correct} Benar / ${stats.total} Soal`;
-        document.getElementById('active-student-display').innerHTML = `<i class="fa-solid fa-user-check text-cyan-400 mr-2"></i> Siswa Menjawab: <span class="text-cyan-400 font-bold">Absen ${numStr}</span>`;
-      } else {
-        document.getElementById('current-selected-absen-text').innerText = 'Belum Dipilih';
-        document.getElementById('stat-correct-count').innerText = '0 Benar';
-        document.getElementById('active-student-display').innerHTML = `<i class="fa-solid fa-hand-pointer text-amber-400 mr-2"></i> Sentuh <span class="text-amber-400 font-bold">Nomor Absen</span> dulu!`;
-      }
+    function toggleTeacherMode() {
+      playSfx('click');
+      renderTeacherRecap();
+      showScreen('screen-teacher');
     }
 
-    function pickAbsen(num) {
-      selectedAbsen = num;
-      renderAbsenGrid();
+    function renderWorldsGrid() {
+      const container = document.getElementById('worlds-grid');
+      container.innerHTML = worlds.map(w => `
+        <div onclick="selectWorld('${w.id}')" class="tech-card rounded-3xl p-6 cursor-pointer hover:border-blueprint-400 hover:shadow-lg transition transform hover:-translate-y-1 active:translate-y-0 group space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 rounded-full bg-blueprint-50 border border-blueprint-200 text-blueprint-700 font-tech font-bold text-xs">
+              ${w.id}
+            </span>
+            <div class="w-10 h-10 rounded-2xl bg-blueprint-100 text-blueprint-600 group-hover:bg-blueprint-500 group-hover:text-white flex items-center justify-center transition">
+              <i class="fa-solid fa-laptop-code text-base"></i>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-xl font-tech font-bold text-slate-900 group-hover:text-blueprint-600 transition">${w.name}</h3>
+            <p class="text-xs text-slate-500 font-medium mt-1">${w.desc}</p>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-tech font-semibold text-slate-400 group-hover:text-blueprint-500 transition">
+            <span>${w.tag}</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* LOAD QUESTION & DYNAMIC TIMER LOGIC */
+    function getQuestionTimeLimit(difficulty) {
+      if (difficulty === 'hard') return 60; // 60 detik untuk HOTS / Hard
+      if (difficulty === 'medium') return 40; // 40 detik untuk Sedang
+      return 30; // 30 detik untuk Mudah
     }
 
     function loadQuestion() {
+      stopTimer();
       hasAnswered = false;
+      selectedAbsen = null;
+
       const q = activeQuestions[currentQIndex];
+
+      // SET TIMER BERDASARKAN TINGKAT KESULITAN
+      maxTimeForQ = getQuestionTimeLimit(q.difficulty);
+      timeLeft = maxTimeForQ;
+
+      updateTimerUI();
 
       document.getElementById('current-q-num').innerText = currentQIndex + 1;
       document.getElementById('total-q-num').innerText = activeQuestions.length;
       document.getElementById('question-text').innerText = q.q;
 
-      // Reset Feedback
+      // RENDER DIFFICULTY BADGE
+      const diffBadge = document.getElementById('difficulty-badge');
+      if (q.difficulty === 'hard') {
+        diffBadge.className = "px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-tech font-bold text-xs flex items-center gap-1.5 shadow-sm";
+        diffBadge.innerHTML = `<i class="fa-solid fa-fire text-rose-500"></i> HARD / HOTS (+20 XP)`;
+      } else if (q.difficulty === 'medium') {
+        diffBadge.className = "px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-tech font-bold text-xs flex items-center gap-1.5 shadow-sm";
+        diffBadge.innerHTML = `<i class="fa-solid fa-bolt text-amber-500"></i> SEDANG (+15 XP)`;
+      } else {
+        diffBadge.className = "px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-tech font-bold text-xs flex items-center gap-1.5 shadow-sm";
+        diffBadge.innerHTML = `<i class="fa-solid fa-leaf text-emerald-500"></i> MUDAH (+10 XP)`;
+      }
+
       document.getElementById('feedback-box').className = "hidden";
 
-      // Disable Next Button
       const nextBtn = document.getElementById('next-btn');
       nextBtn.disabled = true;
-      nextBtn.className = "px-6 md:px-8 py-3 bg-slate-800 text-slate-500 font-extrabold text-base md:text-xl rounded-2xl cursor-not-allowed transition flex items-center gap-2";
+      nextBtn.className = "px-6 py-3 bg-slate-200 text-slate-400 font-tech font-bold text-xs md:text-sm rounded-xl cursor-not-allowed transition flex items-center gap-2 uppercase tracking-wider";
 
-      // Render Opsi
       const labels = ['A', 'B', 'C', 'D'];
       const optionsContainer = document.getElementById('options-container');
       optionsContainer.innerHTML = q.options.map((opt, idx) => `
-        <button onclick="checkAnswer(${idx})" class="option-btn p-4 md:p-5 rounded-2xl bg-slate-900/90 border-2 border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800/80 transition active:scale-95 text-left flex items-center space-x-3.5 group cursor-pointer">
-          <span class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 group-hover:bg-cyan-400 group-hover:text-slate-950 flex items-center justify-center font-black text-lg text-cyan-400 transition flex-shrink-0">
+        <button onclick="checkAnswer(${idx})" class="option-btn p-4 rounded-2xl bg-white border border-slate-200 hover:border-blueprint-300 hover:bg-blueprint-50/50 transition text-left flex items-center space-x-3.5 group cursor-pointer shadow-sm">
+          <span class="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 group-hover:bg-blueprint-500 group-hover:text-white flex items-center justify-center font-tech font-bold text-sm text-slate-700 transition flex-shrink-0">
             ${labels[idx]}
           </span>
-          <span class="text-sm md:text-base font-semibold text-slate-200">${opt}</span>
+          <span class="text-xs md:text-sm font-semibold text-slate-800">${opt}</span>
         </button>
       `).join('');
+
+      renderAbsenGrid();
+      updateSelectedAbsenBadge();
+    }
+
+    function renderAbsenGrid() {
+      const grid = document.getElementById('absen-grid');
+      let html = '';
+      for (let i = 1; i <= 32; i++) {
+        const numStr = i < 10 ? `0${i}` : `${i}`;
+        const isSelected = selectedAbsen === i;
+        const studentXP = scores[activeClass][i] || 0;
+        const rankInfo = getRank(studentXP);
+
+        html += `
+          <button onclick="pickAbsen(${i})" class="absen-btn p-2 rounded-2xl border text-center font-tech transition relative flex flex-col items-center justify-center gap-0.5 ${
+            isSelected 
+              ? 'bg-blueprint-500 border-blueprint-600 text-white shadow-md shadow-blueprint-500/30 scale-105' 
+              : 'bg-white border-slate-200 text-slate-700 hover:border-blueprint-300 hover:bg-blueprint-50'
+          }">
+            <span class="text-[10px] font-bold">${numStr}</span>
+            <div class="flex items-center gap-1 text-[9px] font-bold">
+              <span>${rankInfo.emoji}</span>
+              <span class="${isSelected ? 'text-white' : 'text-blueprint-600'}">${studentXP} XP</span>
+            </div>
+          </button>
+        `;
+      }
+      grid.innerHTML = html;
+    }
+
+    function pickAbsen(num) {
+      if (hasAnswered) return;
+
+      playSfx('click');
+      selectedAbsen = num;
+      renderAbsenGrid();
+      updateSelectedAbsenBadge();
+
+      // RESET & START TIMER DYNAMIC
+      const q = activeQuestions[currentQIndex];
+      maxTimeForQ = getQuestionTimeLimit(q.difficulty);
+      timeLeft = maxTimeForQ;
+      
+      updateTimerUI();
+      startTimer();
+    }
+
+    function updateSelectedAbsenBadge() {
+      const badge = document.getElementById('selected-absen-badge');
+      if (selectedAbsen) {
+        const xp = scores[activeClass][selectedAbsen] || 0;
+        const rank = getRank(xp);
+        badge.innerText = `#${selectedAbsen < 10 ? '0' + selectedAbsen : selectedAbsen} · ${rank.title} (${xp} XP)`;
+        badge.className = "px-2.5 py-1 rounded-lg bg-blueprint-500 text-white font-tech font-bold text-xs shadow-sm";
+      } else {
+        badge.innerText = "BELUM DIPILIH";
+        badge.className = "px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 font-tech font-bold text-xs";
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerUI();
+
+        if (timeLeft <= 5 && timeLeft > 0) {
+          playSfx('tick');
+        }
+
+        if (timeLeft <= 0) {
+          stopTimer();
+          handleTimeout();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+    }
+
+    function updateTimerUI() {
+      const text = document.getElementById('timer-text');
+      const bar = document.getElementById('timer-bar');
+      const badge = document.getElementById('timer-badge');
+
+      text.innerText = `${timeLeft}s`;
+      const percentage = (timeLeft / maxTimeForQ) * 100;
+      bar.style.width = `${percentage}%`;
+
+      if (timeLeft > 10) {
+        bar.className = "h-full bg-blueprint-500 transition-all duration-1000";
+        badge.className = "px-3 py-1 rounded-full bg-blueprint-50 text-blueprint-700 border border-blueprint-200 font-tech font-bold text-sm flex items-center gap-2";
+      } else if (timeLeft > 5) {
+        bar.className = "h-full bg-amber-500 transition-all duration-1000";
+        badge.className = "px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-tech font-bold text-sm flex items-center gap-2";
+      } else {
+        bar.className = "h-full bg-rose-500 transition-all duration-1000";
+        badge.className = "px-3 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-300 font-tech font-bold text-sm flex items-center gap-2 animate-pulse";
+      }
+    }
+
+    function handleTimeout() {
+      hasAnswered = true;
+      playSfx('timeup');
+
+      const q = activeQuestions[currentQIndex];
+      const penalty = q.difficulty === 'hard' ? 5 : (q.difficulty === 'medium' ? 3 : 1);
+
+      if (selectedAbsen) {
+        scores[activeClass][selectedAbsen] = Math.max(0, scores[activeClass][selectedAbsen] - penalty);
+        renderAbsenGrid();
+        updateSelectedAbsenBadge();
+      }
+
+      const buttons = document.querySelectorAll('#options-container button');
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+        btn.classList.add('cursor-not-allowed', 'opacity-60');
+        if (idx === q.correct) {
+          btn.className = "p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-500 text-left flex items-center space-x-3.5 shadow-sm";
+        }
+      });
+
+      const fb = document.getElementById('feedback-box');
+      fb.className = "p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 transition-all space-y-2";
+      document.getElementById('feedback-title').className = "flex items-center gap-2 font-tech font-bold text-sm md:text-base text-rose-700";
+      document.getElementById('feedback-icon').className = "fa-solid fa-clock-rotate-left";
+      document.getElementById('feedback-heading').innerText = `WAKTU HABIS (-${penalty} XP PENALTI)`;
+      document.getElementById('feedback-text').innerText = `Waktu ${maxTimeForQ} detik habis! Jawaban yang benar: Opsi (${['A','B','C','D'][q.correct]}). ${q.exp}`;
+
+      enableNextButton();
     }
 
     function checkAnswer(chosenIdx) {
       if (!selectedAbsen) {
-        showToast("Siswa wajib memilih nomor absen di papan kanan dulu!");
-        playSFX('wrong');
+        playSfx('wrong');
+        const badge = document.getElementById('selected-absen-badge');
+        badge.className = "px-2.5 py-1 rounded-lg bg-rose-500 text-white font-tech font-bold text-xs animate-bounce shadow-md";
+        setTimeout(() => {
+          badge.className = "px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 font-tech font-bold text-xs";
+        }, 1200);
         return;
       }
+
       if (hasAnswered) return;
 
       hasAnswered = true;
+      stopTimer();
+
       const q = activeQuestions[currentQIndex];
-      const stats = studentStats[selectedAbsen];
-      stats.total++;
+      const isCorrect = chosenIdx === q.correct;
+      const buttons = document.querySelectorAll('#options-container button');
 
-      const feedbackBox = document.getElementById('feedback-box');
-      const feedbackIcon = document.getElementById('feedback-icon');
-      const feedbackTitle = document.getElementById('feedback-title');
-      const feedbackDesc = document.getElementById('feedback-desc');
+      // DIFFICULTY XP REWARD & PENALTY
+      let reward = 10;
+      let penalty = 1;
+      if (q.difficulty === 'hard') { reward = 20; penalty = 5; }
+      else if (q.difficulty === 'medium') { reward = 15; penalty = 3; }
 
-      feedbackBox.classList.remove('hidden');
-
-      let checkMilestone = false;
-
-      if (chosenIdx === q.answer) {
-        playSFX('correct');
-        confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
-
-        // Tambah poin: Setiap 1 soal benar = 20 poin (5 soal benar = 100 poin!)
-        stats.correct++;
-        stats.score += 20;
-
-        feedbackBox.className = "p-4 rounded-2xl border transition-all duration-300 bg-emerald-950/40 border-emerald-500/50 text-emerald-200";
-        feedbackIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i>`;
-        feedbackTitle.innerText = `Jawaban Tepat, Absen ${selectedAbsen < 10 ? '0' + selectedAbsen : selectedAbsen}! (+20 Poin)`;
-        feedbackDesc.innerText = q.fact;
-
-        // Cek milestone kelipatan 5 soal benar (100 poin, 200 poin, dst)
-        if (stats.correct > 0 && stats.correct % 5 === 0 && stats.correct > stats.lastMilestoneSeen) {
-          stats.lastMilestoneSeen = stats.correct;
-          checkMilestone = true;
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === q.correct) {
+          btn.className = "p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-500 text-left flex items-center space-x-3.5 shadow-sm";
+        } else if (idx === chosenIdx && !isCorrect) {
+          btn.className = "p-4 rounded-2xl bg-rose-50 border-2 border-rose-500 text-left flex items-center space-x-3.5 shadow-sm";
+        } else {
+          btn.classList.add('opacity-50', 'cursor-not-allowed');
         }
+      });
 
+      const fb = document.getElementById('feedback-box');
+      if (isCorrect) {
+        playSfx('correct');
+        scores[activeClass][selectedAbsen] += reward;
+        renderAbsenGrid();
+        updateSelectedAbsenBadge();
+
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+
+        const currentXP = scores[activeClass][selectedAbsen];
+        const currentRank = getRank(currentXP);
+
+        fb.className = "p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 transition-all space-y-2";
+        document.getElementById('feedback-title').className = "flex items-center gap-2 font-tech font-bold text-sm md:text-base text-emerald-700";
+        document.getElementById('feedback-icon').className = "fa-solid fa-circle-check";
+        document.getElementById('feedback-heading').innerText = `JAWABAN BENAR (+${reward} XP) · RANK: ${currentRank.emoji} ${currentRank.title}`;
+        document.getElementById('feedback-text').innerText = q.exp;
       } else {
-        playSFX('wrong');
-        feedbackBox.className = "p-4 rounded-2xl border transition-all duration-300 bg-amber-950/40 border-amber-500/50 text-amber-200";
-        feedbackIcon.innerHTML = `<i class="fa-solid fa-lightbulb text-amber-400"></i>`;
-        feedbackTitle.innerText = `Hampir Tepat, Absen ${selectedAbsen < 10 ? '0' + selectedAbsen : selectedAbsen}! Ini Kesempatan Memahami Hal Baru`;
-        feedbackDesc.innerText = `Fakta Informatif: ${q.fact}`;
+        playSfx('wrong');
+        scores[activeClass][selectedAbsen] = Math.max(0, scores[activeClass][selectedAbsen] - penalty);
+        renderAbsenGrid();
+        updateSelectedAbsenBadge();
+
+        fb.className = "p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 transition-all space-y-2";
+        document.getElementById('feedback-title').className = "flex items-center gap-2 font-tech font-bold text-sm md:text-base text-rose-700";
+        document.getElementById('feedback-icon').className = "fa-solid fa-circle-xmark";
+        document.getElementById('feedback-heading').innerText = `KURANG TEPAT (-${penalty} XP PENALTI)`;
+        document.getElementById('feedback-text').innerText = q.exp;
       }
 
-      // Update tampilan absen
-      renderAbsenGrid();
+      enableNextButton();
+    }
 
-      // Enable Next Button
+    function enableNextButton() {
       const nextBtn = document.getElementById('next-btn');
       nextBtn.disabled = false;
-      nextBtn.className = "px-6 md:px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-black text-base md:text-xl rounded-2xl cursor-pointer hover:scale-105 active:scale-95 shadow-lg glow-cyan transition flex items-center gap-2";
-
-      // Jika mencapai milestone 5 soal benar -> tampilkan modal selebrasi
-      if (checkMilestone) {
-        setTimeout(() => {
-          showMilestoneModal(selectedAbsen, stats.score);
-        }, 800);
-      }
-    }
-
-    function showMilestoneModal(absenNum, currentScore) {
-      playSFX('milestone');
-      confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
-
-      const numStr = absenNum < 10 ? '0' + absenNum : absenNum;
-      document.getElementById('milestone-student-name').innerText = `Selamat, Absen ${numStr}!`;
-      
-      // Ambil kata mutiara acak
-      const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-      document.getElementById('milestone-quote').innerText = `"${randomQuote}"`;
-
-      document.getElementById('modal-milestone').classList.remove('hidden');
-    }
-
-    function closeMilestone() {
-      document.getElementById('modal-milestone').classList.add('hidden');
+      nextBtn.className = "px-6 py-3 bg-gradient-to-r from-blueprint-600 to-cyan-500 text-white font-tech font-bold text-xs md:text-sm rounded-xl shadow-md shadow-blueprint-500/20 hover:from-blueprint-700 hover:to-cyan-600 transition flex items-center gap-2 uppercase tracking-wider cursor-pointer transform active:scale-95";
     }
 
     function nextQuestion() {
-      if (currentQIndex < activeQuestions.length - 1) {
-        currentQIndex++;
+      playSfx('click');
+      currentQIndex++;
+      if (currentQIndex < activeQuestions.length) {
         loadQuestion();
       } else {
-        finishQuizEarly();
+        alert("Sesi Kuis Selesai! Selamat untuk kelas " + activeClass);
+        goToHome();
       }
     }
 
-    // Fungsi Selesaikan Kuis & Tampilkan Rekap Tabel Nilai
-    function finishQuizEarly() {
-      document.getElementById('screen-quiz').classList.add('hidden');
-      const summaryScreen = document.getElementById('screen-summary');
-      summaryScreen.classList.remove('hidden');
-
-      document.getElementById('summary-title').innerText = `Rekap Kuis Kelas ${selectedClass.id} - ${selectedClass.name}`;
-
-      // Ambil kata mutiara acak untuk rekap
-      const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-      document.getElementById('summary-quote').innerText = `"${randomQuote}"`;
-
-      // Render Tabel Rekap Nilai Absen 01 - 32
-      const tbody = document.getElementById('summary-table-body');
-      let tableHtml = '';
+    function renderTeacherRecap() {
+      const container = document.getElementById('teacher-recap-content');
+      let html = `
+        <table class="w-full text-left border-collapse font-tech text-xs md:text-sm">
+          <thead>
+            <tr class="bg-blueprint-50 text-blueprint-800 border-b border-blueprint-200">
+              <th class="p-3">NO ABSEN</th>
+              ${worlds.map(w => `<th class="p-3 text-center">KELAS ${w.id}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+      `;
 
       for (let i = 1; i <= 32; i++) {
-        const stats = studentStats[i];
-        const numStr = i < 10 ? '0' + i : i;
-        
-        let statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">Belum Menjawab</span>`;
-        if (stats.total > 0) {
-          if (stats.score >= 100) {
-            statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 border border-amber-400/40 text-amber-300"><i class="fa-solid fa-award mr-1"></i>⭐ Super Star (100+ Pt)</span>`;
-          } else {
-            statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-500/20 border border-cyan-400/40 text-cyan-300">Aktif Menjawab</span>`;
-          }
-        }
-
-        tableHtml += `
-          <tr class="hover:bg-slate-800/40 transition">
-            <td class="p-3.5 text-center font-black text-cyan-400">${numStr}</td>
-            <td class="p-3.5">${statusBadge}</td>
-            <td class="p-3.5 text-center font-semibold">${stats.total} Soal</td>
-            <td class="p-3.5 text-center font-bold text-emerald-400">${stats.correct} Benar</td>
-            <td class="p-3.5 text-center font-black text-amber-300 text-base">${stats.score} Pt</td>
-          </tr>
-        `;
+        const numStr = i < 10 ? `0${i}` : `${i}`;
+        html += `<tr class="border-b border-slate-100 hover:bg-slate-50">`;
+        html += `<td class="p-3 font-bold text-slate-700">Absen #${numStr}</td>`;
+        worlds.forEach(w => {
+          const xp = scores[w.id][i] || 0;
+          const rank = getRank(xp);
+          html += `
+            <td class="p-3 text-center">
+              <div class="font-bold ${xp > 0 ? 'text-blueprint-600' : 'text-slate-400'}">${xp} XP</div>
+              <div class="text-[10px] text-slate-500">${rank.emoji} ${rank.title}</div>
+            </td>
+          `;
+        });
+        html += `</tr>`;
       }
 
-      tbody.innerHTML = tableHtml;
-      confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
+      html += `</tbody></table>`;
+      container.innerHTML = html;
     }
 
-    function resetQuiz() {
-      document.getElementById('screen-summary').classList.add('hidden');
-      startMindfulPause();
-    }
+    // Initialize application home state
+    goToHome();
   </script>
 </body>
 </html>
